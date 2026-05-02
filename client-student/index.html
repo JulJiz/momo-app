@@ -80,10 +80,8 @@
           MOMO esta preparando el espacio de dibujo.
         </p>
 
-        <div class="activity-placeholder" aria-live="polite">
-          <p id="activity-placeholder-text">
-            El canvas de dibujo se agregara en el siguiente paso.
-          </p>
+        <div class="drawing-surface" aria-label="Canvas de dibujo local">
+          <canvas id="drawing-canvas" width="320" height="420"></canvas>
         </div>
 
         <p class="feedback-message" id="feedback-message" role="status">
@@ -95,6 +93,7 @@
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="./src/api.js"></script>
     <script src="./src/socket.js"></script>
+    <script src="./src/canvas.js"></script>
     <script src="./src/app.js"></script>
   </body>
 </html>

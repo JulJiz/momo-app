@@ -173,19 +173,30 @@ h2 {
   cursor: pointer;
 }
 
-.activity-placeholder {
+.drawing-surface {
   min-height: 180px;
-  display: grid;
-  place-items: center;
   margin: 24px 0;
-  padding: 24px;
-  border: 2px dashed var(--color-blue);
+  overflow: hidden;
+  border: 2px solid var(--color-blue);
   border-radius: 8px;
   background: #ffffff;
-  text-align: center;
 }
 
-.activity-placeholder p,
+#drawing-canvas {
+  display: block;
+  width: 100%;
+  height: min(58vh, 420px);
+  min-height: 280px;
+  background: #ffffff;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+#drawing-canvas.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
 .feedback-message {
   margin: 0;
   color: var(--color-muted);

@@ -14,9 +14,7 @@ const activityView = document.getElementById("activity-view");
 const activityState = document.getElementById("activity-state");
 const activityTitle = document.getElementById("activity-title");
 const activityDescription = document.getElementById("activity-description");
-const activityPlaceholderText = document.getElementById(
-  "activity-placeholder-text"
-);
+const drawingCanvas = document.getElementById("drawing-canvas");
 const feedbackMessage = document.getElementById("feedback-message");
 
 const appState = {
@@ -63,14 +61,14 @@ function saveClientState(joinResult) {
   appState.sessionStatus = joinResult.session_status;
 }
 
-function showActivityView({ title, description, placeholder }) {
+function showActivityView({ title, description, canDraw }) {
   joinView.hidden = true;
   waitingView.hidden = true;
   activityView.hidden = false;
   activityState.textContent = appState.sessionStatus;
   activityTitle.textContent = title;
   activityDescription.textContent = description;
-  activityPlaceholderText.textContent = placeholder;
+  window.MomoCanvas.setEnabled(canDraw);
 }
 
 function setRealtimeMessage(message) {
@@ -82,6 +80,7 @@ function renderSessionState(state) {
   appState.sessionStatus = state.status;
 
   if (state.status === "waiting") {
+    window.MomoCanvas.setEnabled(false);
     showWaitingRoom();
     return;
   }
@@ -89,8 +88,8 @@ function renderSessionState(state) {
   if (state.status === "active") {
     showActivityView({
       title: "Actividad activa",
-      description: "Ya puedes preparar tus trazos para el canvas.",
-      placeholder: "El canvas de dibujo se agregara en el commit 4.1.",
+      description: "Ya puedes dibujar localmente en tu dispositivo.",
+      canDraw: true,
     });
     return;
   }
@@ -99,7 +98,7 @@ function renderSessionState(state) {
     showActivityView({
       title: "Actividad pausada",
       description: "Espera a que el profesor reactive la sesion.",
-      placeholder: "El envio de trazos estara bloqueado mientras este pausado.",
+      canDraw: false,
     });
     return;
   }
@@ -108,7 +107,7 @@ function renderSessionState(state) {
     showActivityView({
       title: "Actividad finalizada",
       description: "Gracias por participar con MOMO.",
-      placeholder: "La sesion ya no recibe nuevos trazos.",
+      canDraw: false,
     });
   }
 }
@@ -176,6 +175,10 @@ joinForm.addEventListener("submit", async (event) => {
 
 changeSessionButton.addEventListener("click", () => {
   window.MomoSocket.disconnectStudentSocket();
+  window.MomoCanvas.setEnabled(false);
   showJoinView();
   setStatus("Puedes ingresar otro codigo de sesion.");
 });
+
+window.MomoCanvas.init(drawingCanvas);
+window.MomoCanvas.setEnabled(false);
