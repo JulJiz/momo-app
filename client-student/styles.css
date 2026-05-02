@@ -283,6 +283,19 @@ h2 {
   opacity: 0.72;
 }
 
+.sensor-panel {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 18px;
+}
+
+.sensor-panel p {
+  margin: 0;
+  color: var(--color-muted);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
 .feedback-message {
   margin: 0;
   color: var(--color-muted);

@@ -177,6 +177,18 @@
           <canvas id="drawing-canvas" width="320" height="420"></canvas>
         </div>
 
+        <div class="sensor-panel" aria-live="polite">
+          <p id="sensor-status">Sensores en espera.</p>
+          <button
+            class="secondary-button"
+            id="sensor-permission-button"
+            type="button"
+            hidden
+          >
+            Activar sensores
+          </button>
+        </div>
+
         <p class="feedback-message" id="feedback-message" role="status">
           Sin mensajes de MOMO por ahora.
         </p>
@@ -187,6 +199,7 @@
     <script src="./src/api.js"></script>
     <script src="./src/socket.js"></script>
     <script src="./src/canvas.js"></script>
+    <script src="./src/sensors.js"></script>
     <script src="./src/app.js"></script>
   </body>
 </html>

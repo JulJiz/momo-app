@@ -20,6 +20,7 @@
     }
 
     const rect = canvas.getBoundingClientRect();
+    // Ajusta el buffer interno para que el trazo se vea nitido en pantallas HD.
     const pixelRatio = window.devicePixelRatio || 1;
     const width = Math.max(1, Math.floor(rect.width * pixelRatio));
     const height = Math.max(1, Math.floor(rect.height * pixelRatio));
@@ -52,6 +53,7 @@
     context.lineTo(currentPoint.x, currentPoint.y);
     context.stroke();
 
+    // app.js decide si este segmento se envia por Socket.io.
     if (onSegment) {
       onSegment({
         x: currentPoint.x,
@@ -75,6 +77,7 @@
     resizeCanvas();
     isDrawing = true;
     lastPoint = getCanvasPoint(event);
+    // Captura el puntero para que el trazo no se corte al mover rapido.
     canvas.setPointerCapture(event.pointerId);
   }
 

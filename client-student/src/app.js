@@ -18,6 +18,10 @@ const drawingCanvas = document.getElementById("drawing-canvas");
 const colorButtons = document.querySelectorAll("[data-color]");
 const brushButtons = document.querySelectorAll("[data-brush-type]");
 const eraserButton = document.getElementById("eraser-button");
+const sensorStatus = document.getElementById("sensor-status");
+const sensorPermissionButton = document.getElementById(
+  "sensor-permission-button"
+);
 const feedbackMessage = document.getElementById("feedback-message");
 
 const appState = {
@@ -28,6 +32,7 @@ const appState = {
   socket: null,
 };
 
+// Estado local de herramientas; el canvas lo usa para dibujar y emitir trazos.
 const drawingTool = {
   color: "#202124",
   brushType: "medium",
@@ -89,8 +94,15 @@ function setRealtimeMessage(message) {
   setStatus(message);
 }
 
+function setSensorStatus({ message, needsPermission }) {
+  sensorStatus.textContent = message;
+  sensorPermissionButton.hidden = !needsPermission;
+  sensorPermissionButton.disabled = !needsPermission;
+}
+
 function getCanvasTool() {
   if (drawingTool.tool === "eraser") {
+    // En Entrega 1 el borrador viaja como color blanco y tool eraser.
     return {
       color: "#ffffff",
       brushType: drawingTool.brushType,
@@ -151,6 +163,7 @@ function setupDrawingToolbar() {
 }
 
 function emitCanvasSegment(segment) {
+  // Solo se emiten trazos cuando la sesion esta activa y ya hay identidad.
   if (appState.sessionStatus !== "active") {
     return;
   }
@@ -172,11 +185,32 @@ function emitCanvasSegment(segment) {
   }
 }
 
+function emitSensorReading(reading) {
+  // Sensores y dibujo comparten el mismo estado de sesion para no enviar ruido.
+  if (appState.sessionStatus !== "active") {
+    return;
+  }
+
+  if (!appState.sessionCode || !appState.deviceId) {
+    return;
+  }
+
+  window.MomoSocket.emitSensorEvent({
+    session_code: appState.sessionCode,
+    device_id: appState.deviceId,
+    tilt: reading.tilt,
+    shake: reading.shake,
+    orientation: reading.orientation,
+  });
+}
+
 function renderSessionState(state) {
   appState.sessionStatus = state.status;
 
+  // El servidor decide el estado; el cliente solo habilita o bloquea UI.
   if (state.status === "waiting") {
     window.MomoCanvas.setEnabled(false);
+    window.MomoSensors.stop();
     showWaitingRoom();
     return;
   }
@@ -187,6 +221,7 @@ function renderSessionState(state) {
       description: "Ya puedes dibujar localmente en tu dispositivo.",
       canDraw: true,
     });
+    window.MomoSensors.start();
     return;
   }
 
@@ -196,6 +231,7 @@ function renderSessionState(state) {
       description: "Espera a que el profesor reactive la sesion.",
       canDraw: false,
     });
+    window.MomoSensors.stop();
     return;
   }
 
@@ -205,6 +241,7 @@ function renderSessionState(state) {
       description: "Gracias por participar con MOMO.",
       canDraw: false,
     });
+    window.MomoSensors.stop();
   }
 }
 
@@ -218,6 +255,7 @@ function connectRealtime() {
       setRealtimeMessage(feedback.message || "Mensaje recibido.");
     },
     onCanvasBroadcast: (stroke) => {
+      // Log temporal para validar que el backend reemite los trazos.
       console.log("canvas-broadcast recibido", stroke);
     },
     onError: (message) => {
@@ -260,6 +298,7 @@ joinForm.addEventListener("submit", async (event) => {
     });
 
     saveClientState(joinResult);
+    // REST confirma la union; despues se abre el canal en tiempo real.
     connectRealtime();
     renderSessionState({
       session_code: appState.sessionCode,
@@ -275,12 +314,40 @@ joinForm.addEventListener("submit", async (event) => {
 changeSessionButton.addEventListener("click", () => {
   window.MomoSocket.disconnectStudentSocket();
   window.MomoCanvas.setEnabled(false);
+  window.MomoSensors.stop();
   showJoinView();
   setStatus("Puedes ingresar otro codigo de sesion.");
 });
 
+sensorPermissionButton.addEventListener("click", async () => {
+  sensorPermissionButton.disabled = true;
+  setSensorStatus({
+    message: "Solicitando permiso de sensores...",
+    needsPermission: false,
+  });
+
+  try {
+    const hasPermission = await window.MomoSensors.requestPermission();
+
+    if (hasPermission && appState.sessionStatus === "active") {
+      window.MomoSensors.start();
+    }
+  } catch (error) {
+    setSensorStatus({
+      message: "No se pudo activar sensores.",
+      needsPermission: true,
+    });
+  }
+});
+
 window.MomoCanvas.init(drawingCanvas);
 window.MomoCanvas.setSegmentHandler(emitCanvasSegment);
+// Los sensores son progresivos: si el navegador no soporta eventos, no bloquean.
+window.MomoSensors.init({
+  onReading: emitSensorReading,
+  onStatusChange: setSensorStatus,
+  throttleMs: 400,
+});
 setupDrawingToolbar();
 syncDrawingToolbar();
 window.MomoCanvas.setEnabled(false);

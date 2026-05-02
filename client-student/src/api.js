@@ -1,6 +1,7 @@
 (function () {
   const DEVICE_ID_KEY = "momo_device_id";
 
+  // Identifica este navegador durante toda la sesion sin pedir login.
   function createDeviceId() {
     if (window.crypto && window.crypto.randomUUID) {
       return window.crypto.randomUUID();
@@ -25,6 +26,7 @@
     }
   }
 
+  // Algunos errores del backend pueden venir sin JSON; asi evitamos romper la UI.
   async function readJson(response) {
     try {
       return await response.json();
@@ -35,6 +37,7 @@
 
   async function joinSession({ serverUrl, sessionCode, nickname }) {
     const deviceId = getDeviceId();
+    // Contrato REST: el backend necesita codigo, dispositivo y nombre visible.
     const response = await fetch(`${serverUrl}/session/join`, {
       method: "POST",
       headers: {

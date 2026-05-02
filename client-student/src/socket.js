@@ -19,6 +19,7 @@
     });
 
     socket.on("connect", () => {
+      // El join por socket mete al estudiante en el room de su sesion.
       socket.emit("join-session", {
         session_code: sessionCode,
         device_id: deviceId,
@@ -27,6 +28,7 @@
     });
 
     socket.on("session-state", (state) => {
+      // El backend controla waiting, active, paused y ended.
       onSessionState(state);
     });
 
@@ -59,6 +61,7 @@
   }
 
   function emitDrawSegment(payload) {
+    // Evita errores si el estudiante dibuja antes de que el socket conecte.
     if (!socket || !socket.connected) {
       return false;
     }
@@ -67,9 +70,20 @@
     return true;
   }
 
+  function emitSensorEvent(payload) {
+    // Los sensores pueden disparar muchos eventos; app.js ya aplica throttle.
+    if (!socket || !socket.connected) {
+      return false;
+    }
+
+    socket.emit("sensor", payload);
+    return true;
+  }
+
   window.MomoSocket = {
     connectStudentSocket,
     disconnectStudentSocket,
     emitDrawSegment,
+    emitSensorEvent,
   };
 })();
