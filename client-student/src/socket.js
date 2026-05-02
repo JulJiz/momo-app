@@ -7,6 +7,7 @@
     deviceId,
     onSessionState,
     onFeedback,
+    onCanvasBroadcast,
     onError,
   }) {
     if (socket) {
@@ -33,6 +34,12 @@
       onFeedback(feedback);
     });
 
+    socket.on("canvas-broadcast", (stroke) => {
+      if (onCanvasBroadcast) {
+        onCanvasBroadcast(stroke);
+      }
+    });
+
     socket.on("socket-error", (error) => {
       onError(error.message || "Error de conexion en tiempo real.");
     });
@@ -51,8 +58,18 @@
     }
   }
 
+  function emitDrawSegment(payload) {
+    if (!socket || !socket.connected) {
+      return false;
+    }
+
+    socket.emit("draw", payload);
+    return true;
+  }
+
   window.MomoSocket = {
     connectStudentSocket,
     disconnectStudentSocket,
+    emitDrawSegment,
   };
 })();

@@ -272,6 +272,7 @@ function addStroke(sessionCode, stroke) {
     color: safeStroke.color || "#000000",
     brush_type: safeStroke.brush_type || "medium",
     brush_size: Number(safeStroke.brush_size) || 4,
+    tool: safeStroke.tool === "eraser" ? "eraser" : "brush",
     sequence: Number(safeStroke.sequence) || session.strokes.length + 1,
     created_at: Date.now(),
   };

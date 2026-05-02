@@ -35,6 +35,8 @@ const drawingTool = {
   tool: "brush",
 };
 
+let drawSequence = 0;
+
 function setStatus(message) {
   statusMessage.textContent = message;
 }
@@ -69,6 +71,7 @@ function saveClientState(joinResult) {
   appState.deviceId = joinResult.device_id;
   appState.nickname = joinResult.nickname;
   appState.sessionStatus = joinResult.session_status;
+  drawSequence = 0;
 }
 
 function showActivityView({ title, description, canDraw }) {
@@ -147,6 +150,28 @@ function setupDrawingToolbar() {
   });
 }
 
+function emitCanvasSegment(segment) {
+  if (appState.sessionStatus !== "active") {
+    return;
+  }
+
+  if (!appState.sessionCode || !appState.deviceId) {
+    return;
+  }
+
+  const nextSequence = drawSequence + 1;
+  const wasEmitted = window.MomoSocket.emitDrawSegment({
+    session_code: appState.sessionCode,
+    device_id: appState.deviceId,
+    ...segment,
+    sequence: nextSequence,
+  });
+
+  if (wasEmitted) {
+    drawSequence = nextSequence;
+  }
+}
+
 function renderSessionState(state) {
   appState.sessionStatus = state.status;
 
@@ -191,6 +216,9 @@ function connectRealtime() {
     onSessionState: renderSessionState,
     onFeedback: (feedback) => {
       setRealtimeMessage(feedback.message || "Mensaje recibido.");
+    },
+    onCanvasBroadcast: (stroke) => {
+      console.log("canvas-broadcast recibido", stroke);
     },
     onError: (message) => {
       setRealtimeMessage(message);
@@ -252,6 +280,7 @@ changeSessionButton.addEventListener("click", () => {
 });
 
 window.MomoCanvas.init(drawingCanvas);
+window.MomoCanvas.setSegmentHandler(emitCanvasSegment);
 setupDrawingToolbar();
 syncDrawingToolbar();
 window.MomoCanvas.setEnabled(false);
