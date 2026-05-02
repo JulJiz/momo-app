@@ -245,6 +245,59 @@ After joining, the server emits:
 }
 ```
 
+### Send Drawing Data
+
+Students emit `draw` while interacting with the canvas:
+
+```json
+{
+  "session_code": "ABC123",
+  "device_id": "student-device-1",
+  "x": 120,
+  "y": 80,
+  "prev_x": 110,
+  "prev_y": 76,
+  "color": "#ff0000",
+  "brush_type": "medium",
+  "brush_size": 4,
+  "sequence": 1
+}
+```
+
+The server stores the stroke and emits `canvas-broadcast` to:
+
+```text
+session:{session_code}
+session:{session_code}:screen
+```
+
+### Send Sensor Data
+
+Students emit `sensor` with throttled movement data:
+
+```json
+{
+  "session_code": "ABC123",
+  "device_id": "student-device-1",
+  "tilt": {
+    "alpha": 0,
+    "beta": 10,
+    "gamma": -4
+  },
+  "shake": false,
+  "orientation": "portrait"
+}
+```
+
+If `shake` is `true`, the server emits `feedback` to that student:
+
+```json
+{
+  "points": 1,
+  "message": "MOMO vio tu movimiento"
+}
+```
+
 ## Data Model for Delivery 1
 
 Delivery 1 starts with an in-memory store located in `server/src/services/sessionStore.js`. This keeps the MVP simple and can later be migrated to SQLite without changing the public API contracts.

@@ -1,5 +1,7 @@
 const {
   StoreError,
+  addSensorEvent,
+  addStroke,
   findSession,
   getSessionMonitor,
   setStudentConnection,
@@ -32,6 +34,27 @@ function buildSessionState(session) {
     status: session.status,
     time_remaining: session.time_remaining,
   };
+}
+
+function readStudentContext(socket, payload) {
+  const sessionCode = String(
+    payload.session_code || socket.data.sessionCode || ""
+  )
+    .trim()
+    .toUpperCase();
+  const deviceId = String(
+    payload.device_id || socket.data.deviceId || ""
+  ).trim();
+
+  if (!sessionCode) {
+    throw new StoreError("SESSION_CODE_REQUIRED", "session_code is required");
+  }
+
+  if (!deviceId) {
+    throw new StoreError("DEVICE_ID_REQUIRED", "device_id is required");
+  }
+
+  return { sessionCode, deviceId };
 }
 
 function registerMomoSocket(io) {
@@ -76,6 +99,47 @@ function registerMomoSocket(io) {
           "session-state",
           buildSessionState(getSessionMonitor(sessionCode))
         );
+      } catch (error) {
+        emitSocketError(socket, error);
+      }
+    });
+
+    socket.on("draw", (payload = {}) => {
+      try {
+        const { sessionCode, deviceId } = readStudentContext(socket, payload);
+        const storedStroke = addStroke(sessionCode, {
+          ...payload,
+          device_id: deviceId,
+        });
+
+        // Se emite tambien al room de estudiantes para probarlo sin proyector.
+        io.to(buildSessionRoom(sessionCode)).emit(
+          "canvas-broadcast",
+          storedStroke
+        );
+        io.to(buildScreenRoom(sessionCode)).emit(
+          "canvas-broadcast",
+          storedStroke
+        );
+      } catch (error) {
+        emitSocketError(socket, error);
+      }
+    });
+
+    socket.on("sensor", (payload = {}) => {
+      try {
+        const { sessionCode, deviceId } = readStudentContext(socket, payload);
+        const sensorEvent = addSensorEvent(sessionCode, {
+          ...payload,
+          device_id: deviceId,
+        });
+
+        if (sensorEvent.shake) {
+          socket.emit("feedback", {
+            points: 1,
+            message: "MOMO vio tu movimiento",
+          });
+        }
       } catch (error) {
         emitSocketError(socket, error);
       }
