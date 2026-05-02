@@ -35,6 +35,10 @@ input {
   font: inherit;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 .app-shell {
   min-height: 100vh;
   display: grid;
@@ -42,7 +46,8 @@ input {
   padding: 20px;
 }
 
-.join-panel {
+.join-panel,
+.waiting-panel {
   width: min(100%, 420px);
   padding: 28px;
   border: 2px solid var(--color-line);
@@ -71,6 +76,12 @@ h1 {
   margin: 0;
   font-size: clamp(2rem, 9vw, 3rem);
   line-height: 1;
+}
+
+h2 {
+  margin: 0 0 10px;
+  font-size: 2rem;
+  line-height: 1.1;
 }
 
 .intro {
@@ -115,8 +126,50 @@ h1 {
   cursor: pointer;
 }
 
+.join-form button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
 .join-form button:active {
   transform: translateY(1px);
+}
+
+.session-summary {
+  display: grid;
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.session-summary div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px;
+  border: 2px solid var(--color-line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.session-summary dt {
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.session-summary dd {
+  margin: 0;
+  font-weight: 800;
+}
+
+.secondary-button {
+  width: 100%;
+  min-height: 48px;
+  border: 2px solid var(--color-blue);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--color-blue);
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .status-message {

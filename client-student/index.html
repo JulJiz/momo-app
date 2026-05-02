@@ -45,9 +45,37 @@
           Esperando codigo de sesion.
         </p>
       </section>
+
+      <section class="waiting-panel" id="waiting-view" hidden>
+        <p class="eyebrow">Sesion lista</p>
+        <h2>Esperando inicio</h2>
+        <p class="intro">
+          MOMO te avisara cuando la actividad este activa.
+        </p>
+
+        <dl class="session-summary">
+          <div>
+            <dt>Codigo</dt>
+            <dd id="waiting-code">------</dd>
+          </div>
+          <div>
+            <dt>Nombre</dt>
+            <dd id="waiting-name">Estudiante</dd>
+          </div>
+          <div>
+            <dt>Estado</dt>
+            <dd id="waiting-status">waiting</dd>
+          </div>
+        </dl>
+
+        <button class="secondary-button" id="change-session-button" type="button">
+          Cambiar codigo
+        </button>
+      </section>
     </main>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="./src/api.js"></script>
     <script src="./src/app.js"></script>
   </body>
 </html>
