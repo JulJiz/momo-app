@@ -32,9 +32,9 @@ Not included yet:
 
 The project intentionally avoids extra dependencies during Delivery 1 so it stays easy to understand, run and present for class.
 
-## Planned Local Run
+## Local Run
 
-The runnable server starts in commit `1.1`. Once that commit is implemented, the local flow will be:
+Install dependencies and start the Express server:
 
 ```bash
 npm install
@@ -52,6 +52,15 @@ The student client will be opened from:
 ```text
 client-student/index.html
 ```
+
+For local configuration, copy `.env.example` to `.env` if custom values are needed:
+
+```text
+PORT=5050
+CLIENT_ORIGIN=*
+```
+
+`PORT` controls the backend port. `CLIENT_ORIGIN` controls CORS and can stay as `*` during local Delivery 1 testing.
 
 ## Architecture Overview
 
