@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MOMO Student</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell" aria-labelledby="app-title">
+      <section class="join-panel" data-view="join">
+        <div class="brand-block">
+          <p class="eyebrow">MOMO by Crayola</p>
+          <h1 id="app-title">Unirse a sesion</h1>
+          <p class="intro">
+            Ingresa el codigo de la actividad para preparar tu dispositivo.
+          </p>
+        </div>
+
+        <form class="join-form" id="join-form">
+          <label for="session-code">Codigo de sesion</label>
+          <input
+            id="session-code"
+            name="sessionCode"
+            autocomplete="off"
+            inputmode="text"
+            maxlength="6"
+            placeholder="A7K2B9"
+            required
+          />
+
+          <label for="nickname">Nombre</label>
+          <input
+            id="nickname"
+            name="nickname"
+            autocomplete="name"
+            maxlength="24"
+            placeholder="Estudiante 1"
+          />
+
+          <button type="submit">Unirme</button>
+        </form>
+
+        <p class="status-message" id="status-message" role="status">
+          Esperando codigo de sesion.
+        </p>
+      </section>
+
+      <section class="waiting-panel" id="waiting-view" hidden>
+        <p class="eyebrow">Sesion lista</p>
+        <h2>Esperando inicio</h2>
+        <p class="intro">
+          MOMO te avisara cuando la actividad este activa.
+        </p>
+
+        <dl class="session-summary">
+          <div>
+            <dt>Codigo</dt>
+            <dd id="waiting-code">------</dd>
+          </div>
+          <div>
+            <dt>Nombre</dt>
+            <dd id="waiting-name">Estudiante</dd>
+          </div>
+          <div>
+            <dt>Estado</dt>
+            <dd id="waiting-status">waiting</dd>
+          </div>
+        </dl>
+
+        <button class="secondary-button" id="change-session-button" type="button">
+          Cambiar codigo
+        </button>
+      </section>
+
+      <section class="activity-panel" id="activity-view" hidden>
+        <p class="eyebrow" id="activity-state">Sesion</p>
+        <h2 id="activity-title">Preparando actividad</h2>
+        <p class="intro" id="activity-description">
+          MOMO esta preparando el espacio de dibujo.
+        </p>
+
+        <div class="drawing-toolbar" aria-label="Herramientas de dibujo">
+          <div class="tool-group" role="group" aria-label="Colores">
+            <button
+              class="tool-button color-button is-selected"
+              type="button"
+              data-color="#202124"
+              aria-label="Color negro"
+              title="Negro"
+            >
+              <span class="color-swatch color-ink"></span>
+            </button>
+            <button
+              class="tool-button color-button"
+              type="button"
+              data-color="#ef476f"
+              aria-label="Color rojo"
+              title="Rojo"
+            >
+              <span class="color-swatch color-red"></span>
+            </button>
+            <button
+              class="tool-button color-button"
+              type="button"
+              data-color="#118ab2"
+              aria-label="Color azul"
+              title="Azul"
+            >
+              <span class="color-swatch color-blue"></span>
+            </button>
+            <button
+              class="tool-button color-button"
+              type="button"
+              data-color="#06d6a0"
+              aria-label="Color verde"
+              title="Verde"
+            >
+              <span class="color-swatch color-green"></span>
+            </button>
+            <button
+              class="tool-button color-button"
+              type="button"
+              data-color="#ffd166"
+              aria-label="Color amarillo"
+              title="Amarillo"
+            >
+              <span class="color-swatch color-yellow"></span>
+            </button>
+          </div>
+
+          <div class="tool-group" role="group" aria-label="Grosor">
+            <button
+              class="tool-button brush-button"
+              type="button"
+              data-brush-type="thin"
+              data-brush-size="2"
+              aria-label="Pincel fino"
+              title="Fino"
+            >
+              <span class="brush-dot brush-dot-thin"></span>
+            </button>
+            <button
+              class="tool-button brush-button is-selected"
+              type="button"
+              data-brush-type="medium"
+              data-brush-size="4"
+              aria-label="Pincel medio"
+              title="Medio"
+            >
+              <span class="brush-dot brush-dot-medium"></span>
+            </button>
+            <button
+              class="tool-button brush-button"
+              type="button"
+              data-brush-type="thick"
+              data-brush-size="8"
+              aria-label="Pincel grueso"
+              title="Grueso"
+            >
+              <span class="brush-dot brush-dot-thick"></span>
+            </button>
+          </div>
+
+          <button
+            class="tool-button eraser-button"
+            id="eraser-button"
+            type="button"
+            aria-label="Borrador"
+            title="Borrador"
+          >
+            <span class="eraser-mark"></span>
+          </button>
+        </div>
+
+        <div class="drawing-surface" aria-label="Canvas de dibujo local">
+          <canvas id="drawing-canvas" width="320" height="420"></canvas>
+        </div>
+
+        <div class="sensor-panel" aria-live="polite">
+          <p id="sensor-status">Sensores en espera.</p>
+          <button
+            class="secondary-button"
+            id="sensor-permission-button"
+            type="button"
+            hidden
+          >
+            Activar sensores
+          </button>
+        </div>
+
+        <p class="feedback-message" id="feedback-message" role="status">
+          Sin mensajes de MOMO por ahora.
+        </p>
+      </section>
+    </main>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="./src/api.js"></script>
+    <script src="./src/socket.js"></script>
+    <script src="./src/canvas.js"></script>
+    <script src="./src/sensors.js"></script>
+    <script src="./src/app.js"></script>
+  </body>
+</html>
