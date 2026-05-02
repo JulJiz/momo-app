@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MOMO Student</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell" aria-labelledby="app-title">
+      <section class="join-panel" data-view="join">
+        <div class="brand-block">
+          <p class="eyebrow">MOMO by Crayola</p>
+          <h1 id="app-title">Unirse a sesion</h1>
+          <p class="intro">
+            Ingresa el codigo de la actividad para preparar tu dispositivo.
+          </p>
+        </div>
+
+        <form class="join-form" id="join-form">
+          <label for="session-code">Codigo de sesion</label>
+          <input
+            id="session-code"
+            name="sessionCode"
+            autocomplete="off"
+            inputmode="text"
+            maxlength="6"
+            placeholder="A7K2B9"
+            required
+          />
+
+          <label for="nickname">Nombre</label>
+          <input
+            id="nickname"
+            name="nickname"
+            autocomplete="name"
+            maxlength="24"
+            placeholder="Estudiante 1"
+          />
+
+          <button type="submit">Unirme</button>
+        </form>
+
+        <p class="status-message" id="status-message" role="status">
+          Esperando codigo de sesion.
+        </p>
+      </section>
+    </main>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="./src/app.js"></script>
+  </body>
+</html>
