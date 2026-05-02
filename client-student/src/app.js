@@ -10,12 +10,21 @@ const waitingCode = document.getElementById("waiting-code");
 const waitingName = document.getElementById("waiting-name");
 const waitingStatus = document.getElementById("waiting-status");
 const changeSessionButton = document.getElementById("change-session-button");
+const activityView = document.getElementById("activity-view");
+const activityState = document.getElementById("activity-state");
+const activityTitle = document.getElementById("activity-title");
+const activityDescription = document.getElementById("activity-description");
+const activityPlaceholderText = document.getElementById(
+  "activity-placeholder-text"
+);
+const feedbackMessage = document.getElementById("feedback-message");
 
 const appState = {
   sessionCode: null,
   deviceId: null,
   nickname: null,
   sessionStatus: null,
+  socket: null,
 };
 
 function setStatus(message) {
@@ -33,11 +42,13 @@ function setJoinLoading(isLoading) {
 }
 
 function showJoinView() {
+  activityView.hidden = true;
   waitingView.hidden = true;
   joinView.hidden = false;
 }
 
 function showWaitingRoom() {
+  activityView.hidden = true;
   joinView.hidden = true;
   waitingView.hidden = false;
   waitingCode.textContent = appState.sessionCode;
@@ -50,6 +61,71 @@ function saveClientState(joinResult) {
   appState.deviceId = joinResult.device_id;
   appState.nickname = joinResult.nickname;
   appState.sessionStatus = joinResult.session_status;
+}
+
+function showActivityView({ title, description, placeholder }) {
+  joinView.hidden = true;
+  waitingView.hidden = true;
+  activityView.hidden = false;
+  activityState.textContent = appState.sessionStatus;
+  activityTitle.textContent = title;
+  activityDescription.textContent = description;
+  activityPlaceholderText.textContent = placeholder;
+}
+
+function setRealtimeMessage(message) {
+  feedbackMessage.textContent = message;
+  setStatus(message);
+}
+
+function renderSessionState(state) {
+  appState.sessionStatus = state.status;
+
+  if (state.status === "waiting") {
+    showWaitingRoom();
+    return;
+  }
+
+  if (state.status === "active") {
+    showActivityView({
+      title: "Actividad activa",
+      description: "Ya puedes preparar tus trazos para el canvas.",
+      placeholder: "El canvas de dibujo se agregara en el commit 4.1.",
+    });
+    return;
+  }
+
+  if (state.status === "paused") {
+    showActivityView({
+      title: "Actividad pausada",
+      description: "Espera a que el profesor reactive la sesion.",
+      placeholder: "El envio de trazos estara bloqueado mientras este pausado.",
+    });
+    return;
+  }
+
+  if (state.status === "ended") {
+    showActivityView({
+      title: "Actividad finalizada",
+      description: "Gracias por participar con MOMO.",
+      placeholder: "La sesion ya no recibe nuevos trazos.",
+    });
+  }
+}
+
+function connectRealtime() {
+  appState.socket = window.MomoSocket.connectStudentSocket({
+    serverUrl: SERVER_URL,
+    sessionCode: appState.sessionCode,
+    deviceId: appState.deviceId,
+    onSessionState: renderSessionState,
+    onFeedback: (feedback) => {
+      setRealtimeMessage(feedback.message || "Mensaje recibido.");
+    },
+    onError: (message) => {
+      setRealtimeMessage(message);
+    },
+  });
 }
 
 function getJoinErrorMessage(error) {
@@ -86,13 +162,11 @@ joinForm.addEventListener("submit", async (event) => {
     });
 
     saveClientState(joinResult);
-
-    if (appState.sessionStatus === "waiting") {
-      showWaitingRoom();
-      return;
-    }
-
-    setStatus(`Sesion ${appState.sessionStatus}. Preparando actividad.`);
+    connectRealtime();
+    renderSessionState({
+      session_code: appState.sessionCode,
+      status: appState.sessionStatus,
+    });
   } catch (error) {
     setStatus(getJoinErrorMessage(error));
   } finally {
@@ -101,6 +175,7 @@ joinForm.addEventListener("submit", async (event) => {
 });
 
 changeSessionButton.addEventListener("click", () => {
+  window.MomoSocket.disconnectStudentSocket();
   showJoinView();
   setStatus("Puedes ingresar otro codigo de sesion.");
 });

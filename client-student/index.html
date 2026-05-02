@@ -72,10 +72,29 @@
           Cambiar codigo
         </button>
       </section>
+
+      <section class="activity-panel" id="activity-view" hidden>
+        <p class="eyebrow" id="activity-state">Sesion</p>
+        <h2 id="activity-title">Preparando actividad</h2>
+        <p class="intro" id="activity-description">
+          MOMO esta preparando el espacio de dibujo.
+        </p>
+
+        <div class="activity-placeholder" aria-live="polite">
+          <p id="activity-placeholder-text">
+            El canvas de dibujo se agregara en el siguiente paso.
+          </p>
+        </div>
+
+        <p class="feedback-message" id="feedback-message" role="status">
+          Sin mensajes de MOMO por ahora.
+        </p>
+      </section>
     </main>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="./src/api.js"></script>
+    <script src="./src/socket.js"></script>
     <script src="./src/app.js"></script>
   </body>
 </html>
