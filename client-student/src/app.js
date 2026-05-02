@@ -1,5 +1,6 @@
 const SERVER_URL = "http://localhost:5050";
 
+const connectionStatus = document.getElementById("connection-status");
 const joinForm = document.getElementById("join-form");
 const sessionCodeInput = document.getElementById("session-code");
 const nicknameInput = document.getElementById("nickname");
@@ -44,6 +45,12 @@ let drawSequence = 0;
 
 function setStatus(message) {
   statusMessage.textContent = message;
+}
+
+function setConnectionStatus(message, isOnline) {
+  connectionStatus.textContent = message;
+  connectionStatus.classList.toggle("is-online", isOnline);
+  connectionStatus.classList.toggle("is-offline", !isOnline);
 }
 
 function normalizeSessionCode(value) {
@@ -259,7 +266,15 @@ function connectRealtime() {
       console.log("canvas-broadcast recibido", stroke);
     },
     onError: (message) => {
+      setConnectionStatus("Desconectado", false);
       setRealtimeMessage(message);
+    },
+    onConnect: () => {
+      setConnectionStatus("Conectado", true);
+      setStatus("Tiempo real conectado.");
+    },
+    onDisconnect: () => {
+      setConnectionStatus("Desconectado", false);
     },
   });
 }
@@ -290,6 +305,7 @@ joinForm.addEventListener("submit", async (event) => {
   try {
     setJoinLoading(true);
     setStatus("Conectando con la sesion...");
+    setConnectionStatus("Conectando...", false);
 
     const joinResult = await window.MomoApi.joinSession({
       serverUrl: SERVER_URL,
@@ -315,6 +331,7 @@ changeSessionButton.addEventListener("click", () => {
   window.MomoSocket.disconnectStudentSocket();
   window.MomoCanvas.setEnabled(false);
   window.MomoSensors.stop();
+  setConnectionStatus("Desconectado", false);
   showJoinView();
   setStatus("Puedes ingresar otro codigo de sesion.");
 });
@@ -351,3 +368,4 @@ window.MomoSensors.init({
 setupDrawingToolbar();
 syncDrawingToolbar();
 window.MomoCanvas.setEnabled(false);
+setConnectionStatus("Desconectado", false);

@@ -1,6 +1,11 @@
 const SESSION_CODE_LENGTH = 6;
 const DEFAULT_DURATION_MINUTES = 10;
 const CODE_CHARACTERS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const DEFAULT_COLOR = "#000000";
+const DEFAULT_BRUSH_TYPE = "medium";
+const DEFAULT_BRUSH_SIZE = 4;
+const VALID_BRUSH_TYPES = new Set(["thin", "medium", "thick"]);
+const VALID_TOOLS = new Set(["brush", "eraser"]);
 
 class StoreError extends Error {
   constructor(code, message, statusCode = 400) {
@@ -20,6 +25,10 @@ function normalizeSessionCode(sessionCode) {
 
 function normalizeDeviceId(deviceId) {
   return String(deviceId || "").trim();
+}
+
+function normalizeText(value) {
+  return String(value || "").trim();
 }
 
 function createSessionCode() {
@@ -60,9 +69,13 @@ function getSessionOrThrow(sessionCode) {
 }
 
 function sanitizeDurationMinutes(durationMinutes) {
-  const parsedDuration = Number(durationMinutes) || DEFAULT_DURATION_MINUTES;
+  if (durationMinutes === undefined || durationMinutes === null || durationMinutes === "") {
+    return DEFAULT_DURATION_MINUTES;
+  }
 
-  if (parsedDuration <= 0) {
+  const parsedDuration = Number(durationMinutes);
+
+  if (!Number.isFinite(parsedDuration) || parsedDuration <= 0) {
     throw new StoreError(
       "INVALID_DURATION",
       "Session duration must be greater than zero"
@@ -104,6 +117,85 @@ function requireFiniteNumber(value, fieldName) {
   }
 
   return parsedValue;
+}
+
+function sanitizeColor(color) {
+  const normalizedColor = normalizeText(color) || DEFAULT_COLOR;
+
+  if (!/^#[0-9a-fA-F]{6}$/.test(normalizedColor)) {
+    throw new StoreError("INVALID_COLOR", "color must be a hex color");
+  }
+
+  return normalizedColor.toLowerCase();
+}
+
+function sanitizeBrushType(brushType) {
+  const normalizedBrushType = normalizeText(brushType) || DEFAULT_BRUSH_TYPE;
+
+  if (!VALID_BRUSH_TYPES.has(normalizedBrushType)) {
+    throw new StoreError(
+      "INVALID_BRUSH_TYPE",
+      "brush_type must be thin, medium or thick"
+    );
+  }
+
+  return normalizedBrushType;
+}
+
+function sanitizePositiveNumber(value, fieldName, fallback) {
+  if (value === undefined || value === null || value === "") {
+    return fallback;
+  }
+
+  const parsedValue = requireFiniteNumber(value, fieldName);
+
+  if (parsedValue <= 0) {
+    throw new StoreError(
+      "INVALID_NUMERIC_FIELD",
+      `${fieldName} must be greater than zero`
+    );
+  }
+
+  return parsedValue;
+}
+
+function sanitizeTool(tool) {
+  const normalizedTool = normalizeText(tool) || "brush";
+
+  if (!VALID_TOOLS.has(normalizedTool)) {
+    throw new StoreError("INVALID_TOOL", "tool must be brush or eraser");
+  }
+
+  return normalizedTool;
+}
+
+function sanitizeTilt(tilt) {
+  if (!tilt || typeof tilt !== "object") {
+    return null;
+  }
+
+  return {
+    alpha: requireFiniteNumber(tilt.alpha ?? 0, "tilt.alpha"),
+    beta: requireFiniteNumber(tilt.beta ?? 0, "tilt.beta"),
+    gamma: requireFiniteNumber(tilt.gamma ?? 0, "tilt.gamma"),
+  };
+}
+
+function sanitizeOrientation(orientation) {
+  const normalizedOrientation = normalizeText(orientation);
+
+  if (!normalizedOrientation) {
+    return null;
+  }
+
+  if (!["portrait", "landscape"].includes(normalizedOrientation)) {
+    throw new StoreError(
+      "INVALID_ORIENTATION",
+      "orientation must be portrait or landscape"
+    );
+  }
+
+  return normalizedOrientation;
 }
 
 // Convierte registros basados en Map a JSON simple antes de responder.
@@ -179,7 +271,7 @@ function joinSession({ sessionCode, deviceId, nickname }) {
   const student = {
     student_id: normalizedDeviceId,
     device_id: normalizedDeviceId,
-    nickname: String(nickname || "Estudiante").trim() || "Estudiante",
+    nickname: normalizeText(nickname) || "Estudiante",
     status: existingStudent?.status || "idle",
     connected: true,
     joined_at: existingStudent?.joined_at || now,
@@ -269,11 +361,19 @@ function addStroke(sessionCode, stroke) {
       safeStroke.prev_y === undefined
         ? null
         : requireFiniteNumber(safeStroke.prev_y, "prev_y"),
-    color: safeStroke.color || "#000000",
-    brush_type: safeStroke.brush_type || "medium",
-    brush_size: Number(safeStroke.brush_size) || 4,
-    tool: safeStroke.tool === "eraser" ? "eraser" : "brush",
-    sequence: Number(safeStroke.sequence) || session.strokes.length + 1,
+    color: sanitizeColor(safeStroke.color),
+    brush_type: sanitizeBrushType(safeStroke.brush_type),
+    brush_size: sanitizePositiveNumber(
+      safeStroke.brush_size,
+      "brush_size",
+      DEFAULT_BRUSH_SIZE
+    ),
+    tool: sanitizeTool(safeStroke.tool),
+    sequence: sanitizePositiveNumber(
+      safeStroke.sequence,
+      "sequence",
+      session.strokes.length + 1
+    ),
     created_at: Date.now(),
   };
 
@@ -305,9 +405,9 @@ function addSensorEvent(sessionCode, sensorEvent) {
   const storedSensorEvent = {
     session_code: session.session_code,
     device_id: deviceId,
-    tilt: safeSensorEvent.tilt || null,
+    tilt: sanitizeTilt(safeSensorEvent.tilt),
     shake: Boolean(safeSensorEvent.shake),
-    orientation: safeSensorEvent.orientation || null,
+    orientation: sanitizeOrientation(safeSensorEvent.orientation),
     created_at: Date.now(),
   };
 

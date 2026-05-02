@@ -36,14 +36,19 @@ function buildSessionState(session) {
   };
 }
 
+function getSocketPayload(payload) {
+  return payload && typeof payload === "object" ? payload : {};
+}
+
 function readStudentContext(socket, payload) {
+  const safePayload = getSocketPayload(payload);
   const sessionCode = String(
-    payload.session_code || socket.data.sessionCode || ""
+    safePayload.session_code || socket.data.sessionCode || ""
   )
     .trim()
     .toUpperCase();
   const deviceId = String(
-    payload.device_id || socket.data.deviceId || ""
+    safePayload.device_id || socket.data.deviceId || ""
   ).trim();
 
   if (!sessionCode) {
@@ -63,10 +68,19 @@ function registerMomoSocket(io) {
 
     socket.on("join-session", (payload = {}) => {
       try {
-        const sessionCode = String(payload.session_code || "")
+        const safePayload = getSocketPayload(payload);
+        const sessionCode = String(safePayload.session_code || "")
           .trim()
           .toUpperCase();
-        const role = payload.role === "screen" ? "screen" : "student";
+        const role = safePayload.role === "screen" ? "screen" : "student";
+
+        if (!sessionCode) {
+          throw new StoreError(
+            "SESSION_CODE_REQUIRED",
+            "session_code is required"
+          );
+        }
+
         const session = findSession(sessionCode);
 
         if (!session) {
@@ -83,7 +97,7 @@ function registerMomoSocket(io) {
         if (role === "screen") {
           socket.join(buildScreenRoom(sessionCode));
         } else {
-          const deviceId = String(payload.device_id || "").trim();
+          const deviceId = String(safePayload.device_id || "").trim();
 
           if (!deviceId) {
             throw new StoreError("DEVICE_ID_REQUIRED", "device_id is required");
@@ -106,9 +120,13 @@ function registerMomoSocket(io) {
 
     socket.on("draw", (payload = {}) => {
       try {
-        const { sessionCode, deviceId } = readStudentContext(socket, payload);
+        const safePayload = getSocketPayload(payload);
+        const { sessionCode, deviceId } = readStudentContext(
+          socket,
+          safePayload
+        );
         const storedStroke = addStroke(sessionCode, {
-          ...payload,
+          ...safePayload,
           device_id: deviceId,
         });
 
@@ -128,9 +146,13 @@ function registerMomoSocket(io) {
 
     socket.on("sensor", (payload = {}) => {
       try {
-        const { sessionCode, deviceId } = readStudentContext(socket, payload);
+        const safePayload = getSocketPayload(payload);
+        const { sessionCode, deviceId } = readStudentContext(
+          socket,
+          safePayload
+        );
         const sensorEvent = addSensorEvent(sessionCode, {
-          ...payload,
+          ...safePayload,
           device_id: deviceId,
         });
 

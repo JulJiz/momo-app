@@ -8,6 +8,8 @@
     onSessionState,
     onFeedback,
     onCanvasBroadcast,
+    onConnect,
+    onDisconnect,
     onError,
   }) {
     if (socket) {
@@ -19,6 +21,10 @@
     });
 
     socket.on("connect", () => {
+      if (onConnect) {
+        onConnect();
+      }
+
       // El join por socket mete al estudiante en el room de su sesion.
       socket.emit("join-session", {
         session_code: sessionCode,
@@ -48,6 +54,12 @@
 
     socket.on("connect_error", () => {
       onError("No se pudo conectar el tiempo real.");
+    });
+
+    socket.on("disconnect", () => {
+      if (onDisconnect) {
+        onDisconnect();
+      }
     });
 
     return socket;

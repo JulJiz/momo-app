@@ -17,11 +17,14 @@
 html {
   min-height: 100%;
   background: var(--color-paper);
+  overscroll-behavior: none;
 }
 
 body {
   min-height: 100vh;
   margin: 0;
+  overflow-x: hidden;
+  overscroll-behavior: none;
   font-family: Arial, Helvetica, sans-serif;
   color: var(--color-ink);
   background:
@@ -44,6 +47,30 @@ input {
   display: grid;
   place-items: center;
   padding: 20px;
+}
+
+.connection-status {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  margin: 0;
+  padding: 7px 10px;
+  border: 2px solid var(--color-line);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.connection-status.is-online {
+  border-color: var(--color-green);
+  color: #073b2f;
+}
+
+.connection-status.is-offline {
+  border-color: var(--color-red);
 }
 
 .join-panel,
@@ -164,7 +191,7 @@ h2 {
 
 .secondary-button {
   width: 100%;
-  min-height: 48px;
+  min-height: 50px;
   border: 2px solid var(--color-blue);
   border-radius: 8px;
   background: #ffffff;
@@ -189,8 +216,8 @@ h2 {
 .tool-button {
   display: inline-grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border: 2px solid var(--color-line);
   border-radius: 8px;
   background: #ffffff;
@@ -271,7 +298,7 @@ h2 {
 #drawing-canvas {
   display: block;
   width: 100%;
-  height: min(58vh, 420px);
+  height: clamp(260px, 52vh, 420px);
   min-height: 280px;
   background: #ffffff;
   cursor: crosshair;
@@ -317,10 +344,11 @@ h2 {
 @media (max-width: 420px) {
   .app-shell {
     align-items: stretch;
-    padding: 12px;
+    padding: 52px 12px 12px;
   }
 
   .join-panel,
+  .waiting-panel,
   .activity-panel {
     align-self: center;
     padding: 22px;
@@ -328,5 +356,15 @@ h2 {
 
   .drawing-toolbar {
     grid-template-columns: 1fr;
+  }
+
+  .tool-group {
+    justify-content: center;
+  }
+
+  .connection-status {
+    left: 12px;
+    right: 12px;
+    text-align: center;
   }
 }

@@ -31,6 +31,10 @@ function requireField(value, code, message) {
   }
 }
 
+function getRequestBody(request) {
+  return request.body && typeof request.body === "object" ? request.body : {};
+}
+
 function registerSessionControllerSocket(io) {
   socketServer = io;
 }
@@ -50,7 +54,7 @@ function emitSessionState(session) {
 
   const state = buildSessionState(session);
 
-  // Se envia a estudiantes y a la pantalla futura para mantenerlos sincronizados.
+  // Se envia a estudiantes y a la pantalla de proyector para sincronizarlos.
   socketServer
     .to(`session:${session.session_code}`)
     .emit("session-state", state);
@@ -61,8 +65,9 @@ function emitSessionState(session) {
 
 function createSessionHandler(request, response) {
   try {
+    const body = getRequestBody(request);
     const session = createSession({
-      durationMinutes: request.body?.duration_minutes,
+      durationMinutes: body.duration_minutes,
     });
 
     return response.status(201).json({
@@ -77,21 +82,22 @@ function createSessionHandler(request, response) {
 
 function joinSessionHandler(request, response) {
   try {
+    const body = getRequestBody(request);
     requireField(
-      request.body?.session_code,
+      body.session_code,
       "SESSION_CODE_REQUIRED",
       "session_code is required"
     );
     requireField(
-      request.body?.device_id,
+      body.device_id,
       "DEVICE_ID_REQUIRED",
       "device_id is required"
     );
 
     const result = joinSession({
-      sessionCode: request.body.session_code,
-      deviceId: request.body.device_id,
-      nickname: request.body.nickname,
+      sessionCode: body.session_code,
+      deviceId: body.device_id,
+      nickname: body.nickname,
     });
 
     return response.status(200).json(result);
@@ -119,17 +125,18 @@ function getSessionMonitorHandler(request, response) {
 
 function controlSessionHandler(request, response) {
   try {
+    const body = getRequestBody(request);
     requireField(
-      request.body?.session_code,
+      body.session_code,
       "SESSION_CODE_REQUIRED",
       "session_code is required"
     );
-    requireField(request.body?.action, "ACTION_REQUIRED", "action is required");
+    requireField(body.action, "ACTION_REQUIRED", "action is required");
 
     // Start, pause y end se exponen por REST para facilitar la demo.
     const session = updateSessionStatus({
-      sessionCode: request.body.session_code,
-      action: request.body.action,
+      sessionCode: body.session_code,
+      action: body.action,
     });
 
     emitSessionState(session);
