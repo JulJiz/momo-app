@@ -5,6 +5,9 @@ const { Server } = require("socket.io");
 const config = require("./src/config/env");
 const sessionRoutes = require("./src/routes/sessionRoutes");
 const { registerMomoSocket } = require("./src/sockets/momoSocket");
+const {
+  registerSessionControllerSocket,
+} = require("./src/controllers/sessionController");
 
 const app = express();
 const httpServer = createServer(app);
@@ -14,6 +17,7 @@ const io = new Server(httpServer, {
     origin: config.clientOrigin,
   },
 });
+registerSessionControllerSocket(io);
 
 app.use(
   cors({

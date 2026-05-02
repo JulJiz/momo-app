@@ -195,6 +195,8 @@ Success response:
 }
 ```
 
+The server also emits `session-state` through Socket.io to the session rooms after a successful control action.
+
 ## Main Socket.io Events
 
 Available events for Delivery 1:
@@ -300,7 +302,7 @@ If `shake` is `true`, the server emits `feedback` to that student:
 
 ## Data Model for Delivery 1
 
-Delivery 1 starts with an in-memory store located in `server/src/services/sessionStore.js`. This keeps the MVP simple and can later be migrated to SQLite without changing the public API contracts.
+Delivery 1 starts with an in-memory store located in `server/src/services/sessionStore.js`. This keeps the MVP simple and can later be migrated to Supabase without changing the public API contracts.
 
 Current schema-like shape:
 
@@ -347,7 +349,7 @@ SensorEvent
 - created_at: timestamp
 ```
 
-There is no database export in Delivery 1 because persistence is intentionally in memory. If the project moves to SQLite later, this section should become the base for the required schema/export.
+There is no database export in Delivery 1 because persistence is intentionally in memory. When the project moves to Supabase later, this section should become the base for the required schema/export.
 
 ## Demo Notes
 

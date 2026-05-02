@@ -146,6 +146,18 @@ function registerMomoSocket(io) {
     });
 
     socket.on("disconnect", () => {
+      if (socket.data.role === "student" && socket.data.deviceId) {
+        try {
+          setStudentConnection({
+            sessionCode: socket.data.sessionCode,
+            deviceId: socket.data.deviceId,
+            connected: false,
+          });
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
       console.log(`Socket disconnected: ${socket.id}`);
     });
   });

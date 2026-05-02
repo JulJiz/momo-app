@@ -6,6 +6,8 @@ const {
   updateSessionStatus,
 } = require("../services/sessionStore");
 
+let socketServer = null;
+
 // Mantiene errores predecibles para Postman, estudiante y futuras interfaces.
 function sendError(response, error) {
   if (error instanceof StoreError) {
@@ -27,6 +29,34 @@ function requireField(value, code, message) {
   if (value === undefined || value === null || String(value).trim() === "") {
     throw new StoreError(code, message);
   }
+}
+
+function registerSessionControllerSocket(io) {
+  socketServer = io;
+}
+
+function buildSessionState(session) {
+  return {
+    session_code: session.session_code,
+    status: session.status,
+    time_remaining: session.time_remaining,
+  };
+}
+
+function emitSessionState(session) {
+  if (!socketServer) {
+    return;
+  }
+
+  const state = buildSessionState(session);
+
+  // Se envia a estudiantes y a la pantalla futura para mantenerlos sincronizados.
+  socketServer
+    .to(`session:${session.session_code}`)
+    .emit("session-state", state);
+  socketServer
+    .to(`session:${session.session_code}:screen`)
+    .emit("session-state", state);
 }
 
 function createSessionHandler(request, response) {
@@ -102,6 +132,8 @@ function controlSessionHandler(request, response) {
       action: request.body.action,
     });
 
+    emitSessionState(session);
+
     return response.status(200).json({
       session_code: session.session_code,
       status: session.status,
@@ -117,4 +149,5 @@ module.exports = {
   createSessionHandler,
   getSessionMonitorHandler,
   joinSessionHandler,
+  registerSessionControllerSocket,
 };
