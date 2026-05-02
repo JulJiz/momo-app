@@ -15,6 +15,9 @@ const activityState = document.getElementById("activity-state");
 const activityTitle = document.getElementById("activity-title");
 const activityDescription = document.getElementById("activity-description");
 const drawingCanvas = document.getElementById("drawing-canvas");
+const colorButtons = document.querySelectorAll("[data-color]");
+const brushButtons = document.querySelectorAll("[data-brush-type]");
+const eraserButton = document.getElementById("eraser-button");
 const feedbackMessage = document.getElementById("feedback-message");
 
 const appState = {
@@ -23,6 +26,13 @@ const appState = {
   nickname: null,
   sessionStatus: null,
   socket: null,
+};
+
+const drawingTool = {
+  color: "#202124",
+  brushType: "medium",
+  brushSize: 4,
+  tool: "brush",
 };
 
 function setStatus(message) {
@@ -74,6 +84,67 @@ function showActivityView({ title, description, canDraw }) {
 function setRealtimeMessage(message) {
   feedbackMessage.textContent = message;
   setStatus(message);
+}
+
+function getCanvasTool() {
+  if (drawingTool.tool === "eraser") {
+    return {
+      color: "#ffffff",
+      brushType: drawingTool.brushType,
+      brushSize: drawingTool.brushSize,
+      tool: "eraser",
+    };
+  }
+
+  return {
+    color: drawingTool.color,
+    brushType: drawingTool.brushType,
+    brushSize: drawingTool.brushSize,
+    tool: "brush",
+  };
+}
+
+function syncDrawingToolbar() {
+  colorButtons.forEach((button) => {
+    button.classList.toggle(
+      "is-selected",
+      drawingTool.tool === "brush" && button.dataset.color === drawingTool.color
+    );
+  });
+
+  brushButtons.forEach((button) => {
+    button.classList.toggle(
+      "is-selected",
+      button.dataset.brushType === drawingTool.brushType
+    );
+  });
+
+  eraserButton.classList.toggle("is-selected", drawingTool.tool === "eraser");
+  window.MomoCanvas.setTool(getCanvasTool());
+}
+
+function setupDrawingToolbar() {
+  colorButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      drawingTool.color = button.dataset.color;
+      drawingTool.tool = "brush";
+      syncDrawingToolbar();
+    });
+  });
+
+  brushButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      drawingTool.brushType = button.dataset.brushType;
+      drawingTool.brushSize = Number(button.dataset.brushSize);
+      syncDrawingToolbar();
+    });
+  });
+
+  eraserButton.addEventListener("click", () => {
+    // El borrador mantiene el grosor actual y pinta blanco sobre el canvas.
+    drawingTool.tool = "eraser";
+    syncDrawingToolbar();
+  });
 }
 
 function renderSessionState(state) {
@@ -181,4 +252,6 @@ changeSessionButton.addEventListener("click", () => {
 });
 
 window.MomoCanvas.init(drawingCanvas);
+setupDrawingToolbar();
+syncDrawingToolbar();
 window.MomoCanvas.setEnabled(false);

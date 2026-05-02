@@ -173,9 +173,95 @@ h2 {
   cursor: pointer;
 }
 
+.drawing-toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  margin: 20px 0 12px;
+}
+
+.tool-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tool-button {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 2px solid var(--color-line);
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.tool-button.is-selected {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 3px rgba(17, 138, 178, 0.18);
+}
+
+.color-swatch {
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(32, 33, 36, 0.18);
+  border-radius: 50%;
+}
+
+.color-ink {
+  background: var(--color-ink);
+}
+
+.color-red {
+  background: var(--color-red);
+}
+
+.color-blue {
+  background: var(--color-blue);
+}
+
+.color-green {
+  background: var(--color-green);
+}
+
+.color-yellow {
+  background: var(--color-yellow);
+}
+
+.brush-dot {
+  display: block;
+  border-radius: 50%;
+  background: var(--color-ink);
+}
+
+.brush-dot-thin {
+  width: 6px;
+  height: 6px;
+}
+
+.brush-dot-medium {
+  width: 12px;
+  height: 12px;
+}
+
+.brush-dot-thick {
+  width: 18px;
+  height: 18px;
+}
+
+.eraser-mark {
+  width: 24px;
+  height: 16px;
+  border: 2px solid var(--color-red);
+  border-radius: 4px;
+  background: #ffffff;
+  transform: rotate(-18deg);
+}
+
 .drawing-surface {
   min-height: 180px;
-  margin: 24px 0;
+  margin: 0 0 24px;
   overflow: hidden;
   border: 2px solid var(--color-blue);
   border-radius: 8px;
@@ -221,8 +307,13 @@ h2 {
     padding: 12px;
   }
 
-  .join-panel {
+  .join-panel,
+  .activity-panel {
     align-self: center;
     padding: 22px;
+  }
+
+  .drawing-toolbar {
+    grid-template-columns: 1fr;
   }
 }

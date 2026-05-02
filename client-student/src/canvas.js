@@ -3,6 +3,7 @@
     color: "#202124",
     brushType: "medium",
     brushSize: 4,
+    tool: "brush",
   };
 
   let canvas = null;
@@ -60,6 +61,7 @@
         color: tool.color,
         brush_type: tool.brushType,
         brush_size: tool.brushSize,
+        tool: tool.tool,
       });
     }
   }
@@ -120,6 +122,7 @@
   }
 
   function setTool(nextTool) {
+    // app.js controla la toolbar; este modulo solo aplica la herramienta activa.
     tool = {
       ...tool,
       ...nextTool,
