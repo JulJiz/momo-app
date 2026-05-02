@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MOMO Teacher Dashboard</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="page-header">
+        <div>
+          <p class="eyebrow">MOMO by Crayola</p>
+          <h1>Teacher Dashboard</h1>
+          <p class="subtitle">
+            Controla la sesión, supervisa estudiantes y administra el proyector.
+          </p>
+        </div>
+      </header>
+
+      <section class="top-grid">
+        <article class="card code-card">
+          <div class="card-title">Session Code</div>
+          <div class="code-box">
+            <span id="session-code">----</span>
+          </div>
+          <div class="code-actions">
+            <button id="copy-btn" class="button secondary">Copy</button>
+            <button id="create" class="button primary">Create session</button>
+          </div>
+          <p class="hint">
+            Comparte este código con los estudiantes y con el proyector.
+          </p>
+        </article>
+
+        <article class="card status-card">
+          <div class="status-row">
+            <div>
+              <span class="label">Status</span>
+              <strong id="session-status">waiting</strong>
+            </div>
+            <div>
+              <span class="label">Time remaining</span>
+              <strong id="time-remaining">00:00</strong>
+            </div>
+          </div>
+
+          <div class="control-buttons">
+            <button id="start" class="button secondary" disabled>Start</button>
+            <button id="pause" class="button secondary" disabled>Pause</button>
+            <button id="end" class="button danger" disabled>End</button>
+          </div>
+        </article>
+      </section>
+
+      <section class="main-grid">
+        <article class="card students-card">
+          <div class="panel-title">Student Monitor</div>
+          <div class="students-preview">
+            <div class="student-summary">
+              <span class="label">Connected</span>
+              <strong id="students-count">0</strong>
+            </div>
+          </div>
+          <div id="students" class="students-list">
+            <p class="empty-state">Aún no hay estudiantes conectados.</p>
+          </div>
+        </article>
+
+        <article class="card preview-card">
+          <div class="panel-title">Screen preview</div>
+          <div class="preview-box">
+            <p>
+              El proyector mostrará el lienzo en vivo cuando la sesión comience.
+            </p>
+            <div class="preview-placeholder">
+              <span>Live Canvas</span>
+            </div>
+          </div>
+        </article>
+      </section>
+    </div>
+
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
