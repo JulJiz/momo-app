@@ -197,7 +197,7 @@ Success response:
 
 ## Main Socket.io Events
 
-Planned events for Delivery 1:
+Available events for Delivery 1:
 
 ```text
 join-session      Student -> Server
@@ -219,6 +219,30 @@ Room naming:
 ```text
 session:{session_code}
 session:{session_code}:screen
+```
+
+### Join a Socket.io Room
+
+Students join the session room after a successful `POST /session/join`:
+
+```json
+{
+  "session_code": "ABC123",
+  "device_id": "student-device-1",
+  "role": "student"
+}
+```
+
+The future projector screen will use the same event with `role: "screen"` and will join `session:{session_code}:screen`.
+
+After joining, the server emits:
+
+```json
+{
+  "session_code": "ABC123",
+  "status": "waiting",
+  "time_remaining": 600
+}
 ```
 
 ## Data Model for Delivery 1

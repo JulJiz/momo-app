@@ -1,9 +1,19 @@
 const express = require("express");
 const cors = require("cors");
+const { createServer } = require("http");
+const { Server } = require("socket.io");
 const config = require("./src/config/env");
 const sessionRoutes = require("./src/routes/sessionRoutes");
+const { registerMomoSocket } = require("./src/sockets/momoSocket");
 
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  path: "/real-time",
+  cors: {
+    origin: config.clientOrigin,
+  },
+});
 
 app.use(
   cors({
@@ -35,6 +45,8 @@ app.use((error, request, response, next) => {
   return next(error);
 });
 
-app.listen(config.port, () => {
+registerMomoSocket(io);
+
+httpServer.listen(config.port, () => {
   console.log(`MOMO server running on http://localhost:${config.port}`);
 });
