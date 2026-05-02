@@ -88,9 +88,9 @@ MOMO uses two communication styles:
 - HTTP REST for discrete actions such as creating a session, joining a session, controlling the session and checking monitor data.
 - Socket.io/WebSockets for real-time communication such as drawing strokes, sensor events, feedback and session state updates.
 
-## Main REST Contracts
+## Main REST API
 
-Planned endpoints for Delivery 1:
+Available endpoints for Delivery 1:
 
 ```text
 GET  /health
@@ -98,6 +98,101 @@ POST /session/create
 POST /session/join
 GET  /session/monitor?session_code=ABC123
 POST /session/control
+```
+
+### Create Session
+
+```http
+POST /session/create
+```
+
+Request body:
+
+```json
+{
+  "duration_minutes": 10
+}
+```
+
+Success response:
+
+```json
+{
+  "session_code": "ABC123",
+  "status": "waiting",
+  "duration_seconds": 600
+}
+```
+
+### Join Session
+
+```http
+POST /session/join
+```
+
+Request body:
+
+```json
+{
+  "session_code": "ABC123",
+  "device_id": "student-device-1",
+  "nickname": "Student 1"
+}
+```
+
+Success response:
+
+```json
+{
+  "student_id": "student-device-1",
+  "session_code": "ABC123",
+  "status": "joined",
+  "session_status": "waiting"
+}
+```
+
+### Monitor Session
+
+```http
+GET /session/monitor?session_code=ABC123
+```
+
+Success response:
+
+```json
+{
+  "session_code": "ABC123",
+  "status": "waiting",
+  "students": [],
+  "time_remaining": 600
+}
+```
+
+### Control Session
+
+```http
+POST /session/control
+```
+
+Request body:
+
+```json
+{
+  "session_code": "ABC123",
+  "action": "start"
+}
+```
+
+Valid actions are `start`, `pause` and `end`.
+
+Success response:
+
+```json
+{
+  "session_code": "ABC123",
+  "status": "active",
+  "time_remaining": 600
+}
 ```
 
 ## Main Socket.io Events

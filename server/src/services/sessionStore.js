@@ -11,6 +11,7 @@ class StoreError extends Error {
   }
 }
 
+// En la Entrega 1 guardamos datos en memoria para evitar complejidad de BD.
 const sessions = new Map();
 
 function normalizeSessionCode(sessionCode) {
@@ -42,6 +43,7 @@ function generateUniqueSessionCode() {
   return code;
 }
 
+// Centraliza errores de sesion inexistente para REST y sockets.
 function getSessionOrThrow(sessionCode) {
   const normalizedCode = normalizeSessionCode(sessionCode);
   const session = sessions.get(normalizedCode);
@@ -78,6 +80,7 @@ function getElapsedSeconds(startedAt) {
   return Math.floor((Date.now() - startedAt) / 1000);
 }
 
+// El temporizador guarda segundos restantes para soportar pausa y reanudacion.
 function getTimeRemaining(session) {
   if (session.status === "ended") {
     return 0;
@@ -103,6 +106,7 @@ function requireFiniteNumber(value, fieldName) {
   return parsedValue;
 }
 
+// Convierte registros basados en Map a JSON simple antes de responder.
 function serializeStudent(student) {
   return {
     student_id: student.student_id,
@@ -210,6 +214,7 @@ function updateSessionStatus({ sessionCode, action }) {
   }
 
   if (normalizedAction === "pause") {
+    // Congela el contador para que el siguiente start continue desde aqui.
     session.remaining_seconds = getTimeRemaining(session);
     session.status = "paused";
     session.paused_at = Date.now();
@@ -272,6 +277,7 @@ function addStroke(sessionCode, stroke) {
   };
 
   session.strokes.push(storedStroke);
+  // Dibujar tambien actualiza el estado que vera el dashboard del profesor.
   markStudentStatus({
     sessionCode: session.session_code,
     deviceId,
