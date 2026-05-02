@@ -128,14 +128,54 @@ session:{session_code}:screen
 
 ## Data Model for Delivery 1
 
-Delivery 1 starts with an in-memory store. The planned entities are:
+Delivery 1 starts with an in-memory store located in `server/src/services/sessionStore.js`. This keeps the MVP simple and can later be migrated to SQLite without changing the public API contracts.
 
-- `Session`: session code, status, creation time, duration, start time, students, strokes and sensor events.
-- `Student`: device id, nickname, connection state and activity status.
-- `Stroke`: coordinates, previous coordinates, color, brush type, brush size, sequence, timestamp and student id.
-- `SensorEvent`: device tilt, shake flag, orientation, timestamp and student id.
+Current schema-like shape:
 
-If the project moves to SQLite later, this section should become the base for the schema/export required by the repository rubric.
+```text
+Session
+- session_code: unique six-character classroom code
+- status: waiting | active | paused | ended
+- created_at: timestamp
+- duration_seconds: configured session duration
+- remaining_seconds: remaining session time
+- started_at: timestamp or null
+- paused_at: timestamp or null
+- ended_at: timestamp or null
+- students: collection of Student records
+- strokes: collection of Stroke records
+- sensor_events: collection of SensorEvent records
+
+Student
+- student_id: same value as device_id for Delivery 1
+- device_id: browser/device identifier sent by the student client
+- nickname: display name
+- status: idle | drawing
+- connected: boolean
+- joined_at: timestamp
+- last_active_at: timestamp
+
+Stroke
+- session_code: parent session
+- device_id: student device id
+- x, y: current coordinates
+- prev_x, prev_y: previous coordinates or null
+- color: selected drawing color
+- brush_type: selected tool or brush name
+- brush_size: numeric brush size
+- sequence: stroke ordering number
+- created_at: timestamp
+
+SensorEvent
+- session_code: parent session
+- device_id: student device id
+- tilt: device orientation values
+- shake: boolean
+- orientation: portrait, landscape or null
+- created_at: timestamp
+```
+
+There is no database export in Delivery 1 because persistence is intentionally in memory. If the project moves to SQLite later, this section should become the base for the required schema/export.
 
 ## Demo Notes
 
