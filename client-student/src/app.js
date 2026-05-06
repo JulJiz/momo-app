@@ -1,4 +1,5 @@
-const SERVER_URL = "http://localhost:5050";
+const SERVER_URL =
+  window.location.protocol === "file:" ? "http://localhost:5050" : window.location.origin;
 
 const connectionStatus = document.getElementById("connection-status");
 const joinForm = document.getElementById("join-form");

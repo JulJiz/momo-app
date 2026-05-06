@@ -24,7 +24,7 @@
           >
         </div>
         <div class="student-list" id="student-list">
-          <p class="empty-state">Aún no hay estudiantes conectados.</p>
+          <p class="empty-state">Aun no hay estudiantes conectados.</p>
         </div>
         <button id="start-btn" class="button primary">Start Activity</button>
       </section>
@@ -40,7 +40,7 @@
         localStorage.setItem("code", code);
         document.getElementById("code").innerText = code;
 
-        const socket = io("http://localhost:5050", {
+        const socket = io(window.location.origin, {
           path: "/real-time",
         });
 
@@ -54,7 +54,7 @@
 
           if (names.length === 0) {
             studentList.innerHTML =
-              '<p class="empty-state">Aún no hay estudiantes conectados.</p>';
+              '<p class="empty-state">Aun no hay estudiantes conectados.</p>';
             return;
           }
 
@@ -78,7 +78,7 @@
         async function refreshCount() {
           try {
             const res = await fetch(
-              `http://localhost:5050/session/monitor?session_code=${encodeURIComponent(code)}`,
+              `${window.location.origin}/session/monitor?session_code=${encodeURIComponent(code)}`,
             );
             const data = await res.json();
             document.getElementById("students-count").innerText = (

@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { createServer } = require("http");
+const path = require("path");
 const { Server } = require("socket.io");
 const config = require("./src/config/env");
 const sessionRoutes = require("./src/routes/sessionRoutes");
@@ -26,12 +27,20 @@ app.use(
 );
 app.use(express.json());
 
+app.use("/student", express.static(path.join(__dirname, "../client-student")));
+app.use("/teacher", express.static(path.join(__dirname, "../client-teacher")));
+app.use("/screen", express.static(path.join(__dirname, "../client-screen")));
+
 app.get("/health", (request, response) => {
   response.json({
     ok: true,
     app: "momo",
     status: "running",
   });
+});
+
+app.get("/", (request, response) => {
+  response.redirect("/teacher");
 });
 
 // API REST de sesiones usada por el MVP estudiante y el futuro dashboard.
