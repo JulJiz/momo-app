@@ -21,6 +21,7 @@ const endButton = document.getElementById("end-btn");
 const addMinuteButton = document.getElementById("add-minute-btn");
 const sendButton = document.getElementById("send-btn");
 const messageInput = document.getElementById("message-input");
+const messageLog = document.getElementById("message-log");
 const codeBackButton = document.getElementById("code-back");
 const waitingBackButton = document.getElementById("waiting-back");
 const controlBackButton = document.getElementById("control-back");
@@ -122,6 +123,23 @@ function renderCanvasPreview(students = []) {
   });
 }
 
+function renderSentMessage(message) {
+  if (!messageLog) {
+    return;
+  }
+
+  const emptyState = messageLog.querySelector(".empty-state");
+
+  if (emptyState) {
+    emptyState.remove();
+  }
+
+  const item = document.createElement("p");
+  item.className = "message-item";
+  item.textContent = message;
+  messageLog.prepend(item);
+}
+
 function updateTimer(seconds) {
   const totalSeconds = Number(sessionDurationSeconds) || 600;
   const currentSeconds = Math.max(0, Number(seconds) + extraSeconds);
@@ -209,6 +227,19 @@ async function refreshSession() {
   }
 }
 
+async function createFreshSession() {
+  const data = await createSession();
+  extraSeconds = 0;
+  currentStatus = data.status || "waiting";
+  setSessionCode(data.session_code, data.duration_seconds);
+  renderStudentChips([]);
+  renderStudentsList([]);
+  renderCanvasPreview([]);
+  updateTimer(data.duration_seconds);
+  await startMonitoringSession(data.session_code);
+  showView("code");
+}
+
 async function handleControl(action) {
   if (!sessionCode) {
     return;
@@ -218,6 +249,11 @@ async function handleControl(action) {
     await controlSession(sessionCode, action);
     if (action === "start") {
       showView("control");
+    }
+
+    if (action === "end") {
+      localStorage.removeItem("code");
+      await createFreshSession();
     }
   } catch (error) {
     console.error(error);
@@ -244,6 +280,7 @@ async function handleSendMessage() {
   sendButton.disabled = true;
   try {
     await sendSessionMessage(sessionCode, message);
+    renderSentMessage(message);
     messageInput.value = "";
   } catch (error) {
     console.error(error);
