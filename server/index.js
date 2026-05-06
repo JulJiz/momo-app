@@ -14,6 +14,11 @@ const {
 
 const app = express();
 const httpServer = createServer(app);
+const clients = {
+  student: path.join(__dirname, "../client-student"),
+  teacher: path.join(__dirname, "../client-teacher"),
+  screen: path.join(__dirname, "../client-screen"),
+};
 const io = new Server(httpServer, {
   path: "/real-time",
   cors: {
@@ -29,9 +34,25 @@ app.use(
 );
 app.use(express.json());
 
-app.use("/student", express.static(path.join(__dirname, "../client-student")));
-app.use("/teacher", express.static(path.join(__dirname, "../client-teacher")));
-app.use("/screen", express.static(path.join(__dirname, "../client-screen")));
+function serveClient(route, directory) {
+  const staticOptions = {
+    etag: false,
+    maxAge: 0,
+    redirect: false,
+    setHeaders(response) {
+      response.setHeader("Cache-Control", "no-store");
+    },
+  };
+
+  app.use(`/${route}`, express.static(directory, staticOptions));
+  app.get([`/${route}`, `/${route}/`], (request, response) => {
+    response.sendFile(path.join(directory, "index.html"));
+  });
+}
+
+serveClient("student", clients.student);
+serveClient("teacher", clients.teacher);
+serveClient("screen", clients.screen);
 
 app.get("/health", (request, response) => {
   response.json({
