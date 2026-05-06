@@ -65,6 +65,23 @@ function emitSessionState(session) {
     .emit("session-state", state);
 }
 
+function emitTeacherMessage({ sessionCode, message }) {
+  if (!socketServer) {
+    return;
+  }
+
+  const payload = {
+    session_code: sessionCode,
+    message,
+    sent_at: Date.now(),
+  };
+
+  socketServer.to(`session:${sessionCode}`).emit("teacher-message", payload);
+  socketServer
+    .to(`session:${sessionCode}:screen`)
+    .emit("teacher-message", payload);
+}
+
 async function createSessionHandler(request, response) {
   try {
     const body = getRequestBody(request);
@@ -158,10 +175,37 @@ async function controlSessionHandler(request, response) {
   }
 }
 
+function sendMessageHandler(request, response) {
+  try {
+    const body = getRequestBody(request);
+    requireField(
+      body.session_code,
+      "SESSION_CODE_REQUIRED",
+      "session_code is required"
+    );
+    requireField(body.message, "MESSAGE_REQUIRED", "message is required");
+
+    const sessionCode = String(body.session_code).trim().toUpperCase();
+    const message = String(body.message).trim().slice(0, 180);
+
+    getSessionMonitor(sessionCode);
+    emitTeacherMessage({ sessionCode, message });
+
+    return response.status(200).json({
+      status: "sent",
+      session_code: sessionCode,
+      message,
+    });
+  } catch (error) {
+    return sendError(response, error);
+  }
+}
+
 module.exports = {
   controlSessionHandler,
   createSessionHandler,
   getSessionMonitorHandler,
   joinSessionHandler,
   registerSessionControllerSocket,
+  sendMessageHandler,
 };

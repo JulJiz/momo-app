@@ -4,6 +4,7 @@ const {
   createSessionHandler,
   getSessionMonitorHandler,
   joinSessionHandler,
+  sendMessageHandler,
 } = require("../controllers/sessionController");
 
 const router = express.Router();
@@ -13,5 +14,6 @@ router.post("/create", createSessionHandler);
 router.post("/join", joinSessionHandler);
 router.get("/monitor", getSessionMonitorHandler);
 router.post("/control", controlSessionHandler);
+router.post("/message", sendMessageHandler);
 
 module.exports = router;

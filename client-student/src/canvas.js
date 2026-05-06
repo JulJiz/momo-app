@@ -55,11 +55,13 @@
 
     // app.js decide si este segmento se envia por Socket.io.
     if (onSegment) {
+      const rect = canvas.getBoundingClientRect();
+
       onSegment({
-        x: currentPoint.x,
-        y: currentPoint.y,
-        prev_x: previousPoint.x,
-        prev_y: previousPoint.y,
+        x: currentPoint.x / rect.width,
+        y: currentPoint.y / rect.height,
+        prev_x: previousPoint.x / rect.width,
+        prev_y: previousPoint.y / rect.height,
         color: tool.color,
         brush_type: tool.brushType,
         brush_size: tool.brushSize,

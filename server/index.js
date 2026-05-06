@@ -35,7 +35,7 @@ app.use(
 );
 app.use(express.json());
 
-function serveClient(route, directory) {
+function serveClient(route, directory, fallbackRoutes = []) {
   const staticOptions = {
     etag: false,
     maxAge: 0,
@@ -46,12 +46,12 @@ function serveClient(route, directory) {
   };
 
   app.use(`/${route}`, express.static(directory, staticOptions));
-  app.get([`/${route}`, `/${route}/`], (request, response) => {
+  app.get([`/${route}`, `/${route}/`, ...fallbackRoutes], (request, response) => {
     response.sendFile(path.join(directory, "index.html"));
   });
 }
 
-serveClient("student", clients.student);
+serveClient("student", clients.student, ["/student/session/:deviceId"]);
 serveClient("teacher", clients.teacher);
 serveClient("screen", clients.screen);
 app.use("/assets", express.static(clients.assets));

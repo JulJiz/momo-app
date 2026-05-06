@@ -93,7 +93,12 @@
         refreshCount();
         setInterval(refreshCount, 3000);
 
-        document.getElementById("start-btn").addEventListener("click", () => {
+        document.getElementById("start-btn").addEventListener("click", async () => {
+          await fetch(`${window.location.origin}/session/control`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ session_code: code, action: "start" }),
+          });
           location.href = "/screen/dashboard.html";
         });
       }

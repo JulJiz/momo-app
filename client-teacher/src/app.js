@@ -1,4 +1,4 @@
-import { createSession, controlSession } from "./api.js";
+import { createSession, controlSession, sendSessionMessage } from "./api.js";
 import { startMonitoring } from "./dashboard.js";
 
 const codeView = document.getElementById("code-view");
@@ -81,7 +81,7 @@ function renderStudentsList(students = []) {
 
   if (!students.length) {
     studentsListElement.innerHTML =
-      '<p class="empty-state">Aún no hay estudiantes conectados.</p>';
+      '<p class="empty-state">Aun no hay estudiantes conectados.</p>';
     return;
   }
 
@@ -230,8 +230,26 @@ function copyCode() {
   }
 
   navigator.clipboard.writeText(sessionCode).catch(() => {
-    console.warn("No se pudo copiar el código de sesión.");
+    console.warn("No se pudo copiar el codigo de sesion.");
   });
+}
+
+async function handleSendMessage() {
+  const message = messageInput.value.trim();
+
+  if (!sessionCode || !message) {
+    return;
+  }
+
+  sendButton.disabled = true;
+  try {
+    await sendSessionMessage(sessionCode, message);
+    messageInput.value = "";
+  } catch (error) {
+    console.error(error);
+  } finally {
+    sendButton.disabled = false;
+  }
 }
 
 function resetView() {
@@ -255,11 +273,11 @@ window.addEventListener("DOMContentLoaded", () => {
         60,
     );
   });
-  sendButton.addEventListener("click", () => {
-    if (!messageInput.value.trim()) {
-      return;
+  sendButton.addEventListener("click", handleSendMessage);
+  messageInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      handleSendMessage();
     }
-    messageInput.value = "";
   });
   codeBackButton.addEventListener("click", resetView);
   waitingBackButton.addEventListener("click", resetView);

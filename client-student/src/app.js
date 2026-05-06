@@ -25,6 +25,7 @@ const sensorPermissionButton = document.getElementById(
   "sensor-permission-button"
 );
 const feedbackMessage = document.getElementById("feedback-message");
+const STUDENT_STATE_KEY = "momo_student_state";
 
 const appState = {
   sessionCode: null,
@@ -85,6 +86,49 @@ function saveClientState(joinResult) {
   appState.nickname = joinResult.nickname;
   appState.sessionStatus = joinResult.session_status;
   drawSequence = 0;
+
+  try {
+    window.sessionStorage.setItem(
+      STUDENT_STATE_KEY,
+      JSON.stringify({
+        sessionCode: appState.sessionCode,
+        deviceId: appState.deviceId,
+        nickname: appState.nickname,
+        sessionStatus: appState.sessionStatus,
+      })
+    );
+    window.history.replaceState(
+      {},
+      "",
+      `/student/session/${encodeURIComponent(appState.deviceId)}`
+    );
+  } catch (error) {
+    console.warn("No se pudo guardar el estado local del estudiante.");
+  }
+}
+
+function restoreStudentState() {
+  if (!window.location.pathname.startsWith("/student/session/")) {
+    return false;
+  }
+
+  try {
+    const savedState = JSON.parse(
+      window.sessionStorage.getItem(STUDENT_STATE_KEY) || "null"
+    );
+
+    if (!savedState?.sessionCode || !savedState?.deviceId) {
+      return false;
+    }
+
+    appState.sessionCode = savedState.sessionCode;
+    appState.deviceId = savedState.deviceId;
+    appState.nickname = savedState.nickname || "Estudiante";
+    appState.sessionStatus = savedState.sessionStatus || "waiting";
+    return true;
+  } catch (error) {
+    return false;
+  }
 }
 
 function showActivityView({ title, description, canDraw }) {
@@ -262,6 +306,9 @@ function connectRealtime() {
     onFeedback: (feedback) => {
       setRealtimeMessage(feedback.message || "Mensaje recibido.");
     },
+    onTeacherMessage: (message) => {
+      setRealtimeMessage(message.message || "Mensaje del profesor.");
+    },
     onCanvasBroadcast: (stroke) => {
       // Log temporal para validar que el backend reemite los trazos.
       console.log("canvas-broadcast recibido", stroke);
@@ -332,6 +379,8 @@ changeSessionButton.addEventListener("click", () => {
   window.MomoSocket.disconnectStudentSocket();
   window.MomoCanvas.setEnabled(false);
   window.MomoSensors.stop();
+  window.sessionStorage.removeItem(STUDENT_STATE_KEY);
+  window.history.replaceState({}, "", "/student");
   setConnectionStatus("Desconectado", false);
   showJoinView();
   setStatus("Puedes ingresar otro codigo de sesion.");
@@ -370,3 +419,13 @@ setupDrawingToolbar();
 syncDrawingToolbar();
 window.MomoCanvas.setEnabled(false);
 setConnectionStatus("Desconectado", false);
+
+if (restoreStudentState()) {
+  connectRealtime();
+  renderSessionState({
+    session_code: appState.sessionCode,
+    status: appState.sessionStatus,
+  });
+} else {
+  showJoinView();
+}

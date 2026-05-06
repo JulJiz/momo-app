@@ -6,16 +6,27 @@ export async function createSession() {
 }
 
 export async function controlSession(code, action) {
-  await fetch(`${API}/session/control`, {
+  const res = await fetch(`${API}/session/control`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ session_code: code, action }),
   });
+  return res.json();
 }
 
 export async function getStudents(code) {
   const res = await fetch(
     `${API}/session/monitor?session_code=${encodeURIComponent(code)}`,
   );
+  return res.json();
+}
+
+export async function sendSessionMessage(code, message) {
+  const res = await fetch(`${API}/session/message`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session_code: code, message }),
+  });
+
   return res.json();
 }

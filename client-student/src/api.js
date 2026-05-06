@@ -1,7 +1,7 @@
 (function () {
   const DEVICE_ID_KEY = "momo_device_id";
 
-  // Identifica este navegador durante toda la sesion sin pedir login.
+  // Identifica esta pestana. Asi dos estudiantes no comparten identidad.
   function createDeviceId() {
     if (window.crypto && window.crypto.randomUUID) {
       return window.crypto.randomUUID();
@@ -12,14 +12,14 @@
 
   function getDeviceId() {
     try {
-      const storedDeviceId = window.localStorage.getItem(DEVICE_ID_KEY);
+      const storedDeviceId = window.sessionStorage.getItem(DEVICE_ID_KEY);
 
       if (storedDeviceId) {
         return storedDeviceId;
       }
 
       const deviceId = createDeviceId();
-      window.localStorage.setItem(DEVICE_ID_KEY, deviceId);
+      window.sessionStorage.setItem(DEVICE_ID_KEY, deviceId);
       return deviceId;
     } catch (error) {
       return createDeviceId();

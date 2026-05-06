@@ -59,7 +59,8 @@ body::before {
 .teacher-shell {
   min-height: 100vh;
   position: relative;
-  padding: 32px 20px 40px;
+  padding: 32px clamp(16px, 3vw, 40px) 40px;
+  overflow-x: hidden;
 }
 
 .screen {
@@ -312,14 +313,18 @@ body::before {
 
 .control-grid {
   display: grid;
-  grid-template-columns: 1.8fr 1fr;
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
   gap: 24px;
-  width: min(92vw, 1100px);
+  width: min(100%, 1180px);
+  margin: 0 auto;
 }
 
 .card {
   background: rgba(255, 255, 255, 0.98);
   border: 1px solid rgba(148, 163, 184, 0.12);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .card-title {
@@ -428,7 +433,7 @@ body::before {
 
 .message-form {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
   align-items: center;
 }

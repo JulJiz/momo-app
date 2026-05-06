@@ -7,6 +7,7 @@
     deviceId,
     onSessionState,
     onFeedback,
+    onTeacherMessage,
     onCanvasBroadcast,
     onConnect,
     onDisconnect,
@@ -40,6 +41,12 @@
 
     socket.on("feedback", (feedback) => {
       onFeedback(feedback);
+    });
+
+    socket.on("teacher-message", (message) => {
+      if (onTeacherMessage) {
+        onTeacherMessage(message);
+      }
     });
 
     socket.on("canvas-broadcast", (stroke) => {
