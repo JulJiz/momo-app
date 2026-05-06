@@ -1,50 +1,45 @@
-const canvas = document.getElementById("canvas");
-if (!canvas) {
-  throw new Error("Canvas element not found.");
-}
+import { socket } from "./socket.js";
 
+const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight - 140;
-}
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-resizeCanvas();
-window.addEventListener("resize", resizeCanvas);
+socket.on("canvas-broadcast", (data) => {
+  draw(data);
+});
 
-function draw(stroke) {
-  if (!stroke || typeof stroke.x !== "number" || typeof stroke.y !== "number") {
-    return;
-  }
+function draw({ x, y, prev_x, prev_y, color, brush_size, tool }) {
+  const strokeColor = color || "#000000";
+  const size = Number(brush_size) || 4;
+  const isEraser = tool === "eraser";
+  const paintColor = isEraser ? "#ffffff" : strokeColor;
 
-  const x = stroke.x;
-  const y = stroke.y;
-  const prevX = typeof stroke.prev_x === "number" ? stroke.prev_x : x;
-  const prevY = typeof stroke.prev_y === "number" ? stroke.prev_y : y;
-  const color = stroke.color || "#2c5282";
-  const size = stroke.size || 12;
-
-  ctx.strokeStyle = color;
+  ctx.strokeStyle = paintColor;
+  ctx.fillStyle = paintColor;
   ctx.lineWidth = size;
   ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(prevX, prevY);
-  ctx.lineTo(x, y);
-  ctx.stroke();
+  ctx.lineJoin = "round";
 
-  if (prevX === x && prevY === y) {
+  if (
+    prev_x !== undefined &&
+    prev_y !== undefined &&
+    prev_x !== null &&
+    prev_y !== null
+  ) {
     ctx.beginPath();
-    ctx.fillStyle = color;
-    ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+    ctx.moveTo(prev_x, prev_y);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  } else {
+    ctx.beginPath();
+    ctx.arc(x, y, Math.max(1, size / 2), 0, Math.PI * 2);
     ctx.fill();
   }
 }
 
-const attachSocket = setInterval(() => {
-  const socket = window.socket;
-  if (socket && socket.on) {
-    socket.on("canvas-broadcast", draw);
-    clearInterval(attachSocket);
-  }
-}, 50);
+// limpiar canvas
+socket.on("clear-canvas", () => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+});

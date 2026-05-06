@@ -1,4 +1,4 @@
-const API = "http://localhost:3000";
+const API = "http://localhost:5050";
 
 export async function createSession() {
   const res = await fetch(`${API}/session/create`, { method: "POST" });

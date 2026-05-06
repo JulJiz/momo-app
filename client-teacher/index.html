@@ -3,81 +3,119 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MOMO Teacher Dashboard</title>
+    <title>MOMO Teacher</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="page">
-      <header class="page-header">
-        <div>
-          <p class="eyebrow">MOMO by Crayola</p>
-          <h1>Teacher Dashboard</h1>
-          <p class="subtitle">
-            Controla la sesión, supervisa estudiantes y administra el proyector.
-          </p>
+    <div class="teacher-shell">
+      <section class="screen screen-code" id="code-view">
+        <div class="top-bar">
+          <button class="back-button" id="code-back" aria-label="Back">
+            ←
+          </button>
         </div>
-      </header>
 
-      <section class="top-grid">
-        <article class="card code-card">
-          <div class="card-title">Session Code</div>
-          <div class="code-box">
+        <div class="hero-card">
+          <div class="hero-copy">
+            <h1>Start your momo session!</h1>
+            <p>Share this code!</p>
+          </div>
+
+          <div class="hero-code-card">
             <span id="session-code">----</span>
           </div>
-          <div class="code-actions">
-            <button id="copy-btn" class="button secondary">Copy</button>
-            <button id="create" class="button primary">Create session</button>
-          </div>
-          <p class="hint">
-            Comparte este código con los estudiantes y con el proyector.
-          </p>
-        </article>
 
-        <article class="card status-card">
-          <div class="status-row">
-            <div>
-              <span class="label">Status</span>
-              <strong id="session-status">waiting</strong>
-            </div>
-            <div>
-              <span class="label">Time remaining</span>
-              <strong id="time-remaining">00:00</strong>
-            </div>
+          <div class="hero-actions">
+            <button id="copy-btn" class="button button-primary">Copy</button>
+            <button id="refresh-btn" class="button button-secondary">
+              Refresh
+            </button>
           </div>
 
-          <div class="control-buttons">
-            <button id="start" class="button secondary" disabled>Start</button>
-            <button id="pause" class="button secondary" disabled>Pause</button>
-            <button id="end" class="button danger" disabled>End</button>
-          </div>
-        </article>
+          <button id="next-btn" class="button button-next">Next</button>
+        </div>
       </section>
 
-      <section class="main-grid">
-        <article class="card students-card">
-          <div class="panel-title">Student Monitor</div>
-          <div class="students-preview">
-            <div class="student-summary">
-              <span class="label">Connected</span>
-              <strong id="students-count">0</strong>
+      <section class="screen screen-waiting hidden" id="waiting-view">
+        <div class="waiting-panel">
+          <div class="waiting-header">
+            <button class="back-button" id="waiting-back" aria-label="Back">
+              ←
+            </button>
+            <div class="waiting-banner">
+              <span>Session Code :</span>
+              <strong id="waiting-code">----</strong>
             </div>
           </div>
-          <div id="students" class="students-list">
-            <p class="empty-state">Aún no hay estudiantes conectados.</p>
-          </div>
-        </article>
 
-        <article class="card preview-card">
-          <div class="panel-title">Screen preview</div>
-          <div class="preview-box">
-            <p>
-              El proyector mostrará el lienzo en vivo cuando la sesión comience.
-            </p>
-            <div class="preview-placeholder">
-              <span>Live Canvas</span>
-            </div>
+          <p class="waiting-title">Students are joining</p>
+          <div class="waiting-status">
+            <span class="status-label">
+              <strong id="waiting-count">0</strong> Students connected
+            </span>
           </div>
-        </article>
+
+          <div class="waiting-students" id="waiting-students">
+            <span class="student-chip">No students yet</span>
+          </div>
+
+          <button id="start-btn" class="button button-start">
+            Start activity
+          </button>
+        </div>
+      </section>
+
+      <section class="screen screen-control hidden" id="control-view">
+        <div class="control-header">
+          <button class="back-button" id="control-back" aria-label="Back">
+            ←
+          </button>
+          <h1>Control panel</h1>
+        </div>
+
+        <div class="control-grid">
+          <article class="card card-preview">
+            <div class="card-title">Canvas Preview</div>
+            <div class="preview-grid" id="canvas-preview-grid"></div>
+          </article>
+
+          <article class="card card-message">
+            <div class="card-title">Group message</div>
+            <div class="message-form">
+              <input
+                id="message-input"
+                type="text"
+                placeholder="Write a message"
+              />
+              <button id="send-btn" class="button button-primary">Send</button>
+            </div>
+          </article>
+
+          <article class="card card-students">
+            <div class="card-title">Students</div>
+            <div class="students-header">
+              <span id="students-count">0</span>
+            </div>
+            <div id="students" class="students-list">
+              <p class="empty-state">Aún no hay estudiantes conectados.</p>
+            </div>
+          </article>
+
+          <article class="card card-timer">
+            <div class="card-title">Time remaining</div>
+            <div class="timer-track">
+              <div class="timer-progress" id="timer-progress"></div>
+            </div>
+            <div class="timer-value" id="time-remaining">00:00</div>
+          </article>
+        </div>
+
+        <div class="control-actions">
+          <button id="add-minute-btn" class="button button-secondary">
+            + Add minute
+          </button>
+          <button id="end-btn" class="button button-end">End session</button>
+        </div>
       </section>
     </div>
 

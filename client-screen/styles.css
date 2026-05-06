@@ -1,184 +1,216 @@
-* {
-  box-sizing: border-box;
-}
-
+﻿/* RESET */
 body {
   margin: 0;
-  min-height: 100vh;
-  background: #f5f5f0;
-  font-family:
-    "Inter",
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
-  color: #2c2c2c;
-  position: relative;
-  overflow-x: hidden;
+  font-family: "Comic Sans MS", cursive;
+  background: #fffaf2;
+  overflow: hidden;
 }
 
-body::before {
+/* FONDO GENERAL */
+.screen-shell {
+  width: 100vw;
+  min-height: 100vh;
+  position: relative;
+  background: #fffaf2;
+}
+
+.screen-shell::before {
   content: "";
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 200px;
-  background: linear-gradient(to top, #ff9500 0%, rgba(255, 149, 0, 0.5) 100%);
-  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background-image: url("../assets/Vector.png");
+  background-position: bottom center;
+  background-size: 100% auto;
+  background-repeat: no-repeat;
   z-index: 0;
 }
 
-body::after {
+.screen-shell::after {
   content: "";
-  position: fixed;
-  bottom: 0;
-  right: 80px;
+  position: absolute;
   width: 280px;
   height: 280px;
-  background-image: url("assets/Layer 10 Imagen.png");
-  background-repeat: no-repeat;
-  background-size: contain;
-  background-position: bottom right;
-  opacity: 1;
+  top: 16%;
+  right: 6%;
+  background: url("../assets/Group-4.png") center/contain no-repeat;
   z-index: 1;
-  pointer-events: none;
+  opacity: 0.95;
 }
 
-.screen-shell {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 32px 24px 40px;
-  position: relative;
-  z-index: 2;
+.waiting-card::before {
+  content: "";
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  top: 14px;
+  left: -12px;
+  background: url("../assets/Group-10.png") center/contain no-repeat;
+  z-index: 0;
+  opacity: 0.95;
 }
 
+.canvas-card::before {
+  content: "";
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  bottom: 12px;
+  right: -8px;
+  background: url("../assets/Crayon-2.png") center/contain no-repeat;
+  z-index: 0;
+  opacity: 0.95;
+}
+
+/* CONTENIDO */
 .waiting-card,
 .canvas-card {
-  background: #ffffff;
-  border: 2px solid #e0e0d5;
-  border-radius: 28px;
-  padding: 30px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
+  position: relative;
+  z-index: 2;
 
-.waiting-card {
-  max-width: 760px;
-  margin: 0 auto;
+  width: 700px;
+  max-width: 92%;
+
+  margin: 60px auto;
+  padding: 34px;
+
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 30px;
   text-align: center;
+  box-shadow: 0 14px 0 rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 122, 0, 0.14);
 }
 
-.waiting-card h1,
-.canvas-header h1 {
-  margin: 0;
-  font-size: clamp(2rem, 4vw, 3rem);
-  color: #2c2c2c;
+/* TITULOS */
+h1 {
+  color: #ff7a00;
+  font-size: 32px;
+  margin: 0 0 16px;
 }
 
-.waiting-card p,
-.canvas-header p {
-  margin: 16px auto 0;
-  max-width: 560px;
-  color: #666666;
-  line-height: 1.8;
-}
-
+/* SESSION CODE */
 .code-pill {
-  margin: 28px auto 20px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 260px;
-  padding: 18px 28px;
-  border-radius: 999px;
-  background: #ff9500;
-  border: none;
-  font-size: 1.6rem;
-  letter-spacing: 0.24em;
-  font-weight: 700;
-  color: #fff;
+  border: 3px solid #ff7a00;
+  padding: 16px 34px;
+  border-radius: 22px;
+  font-size: 32px;
+  margin: 16px 0;
+  font-weight: 800;
+  background: white;
+  display: inline-block;
 }
 
+/* STATUS */
 .status-line {
+  margin: 20px 0;
   display: flex;
-  justify-content: center;
-  gap: 18px;
   flex-wrap: wrap;
-  margin-top: 20px;
+  justify-content: center;
+  gap: 10px;
 }
 
 .status-chip {
+  background: #ffe5d0;
+  padding: 10px 16px;
+  border-radius: 999px;
+  margin: 5px;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: 999px;
-  background: #ffe5cc;
-  color: #ff9500;
-  font-weight: 600;
+  font-weight: 700;
+  color: #b45f02;
 }
 
-.button {
-  border: none;
+/* STUDENTS */
+.student-list {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  min-height: 86px;
+}
+
+.student-chip {
+  background: #ffb3c1;
+  color: #7f1d2c;
+  padding: 8px 14px;
   border-radius: 999px;
-  padding: 16px 28px;
-  font-size: 1rem;
+  margin: 4px;
+  display: inline-flex;
   font-weight: 700;
+}
+
+/* BOTON */
+.button {
+  background: #ff7a00;
+  color: white;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 18px;
+  font-weight: bold;
   cursor: pointer;
+  font-size: 16px;
+  margin-top: 15px;
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.08);
   transition:
-    transform 120ms ease,
-    filter 120ms ease;
+    transform 0.2s ease,
+    filter 0.2s ease;
 }
 
 .button:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  filter: brightness(1.05);
 }
 
 .button.primary {
-  background: #ff9500;
-  color: #fff;
+  min-width: 200px;
 }
 
-.button.secondary {
-  background: #f5f5f0;
-  color: #2c2c2c;
-  border: 2px solid #e0e0d5;
-}
-
+/* HEADER CANVAS */
 .canvas-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  margin-bottom: 18px;
-}
-
-.canvas-header .info-group {
   display: grid;
-  gap: 8px;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 16px;
+  align-items: stretch;
+  margin-bottom: 24px;
 }
 
-.canvas-header strong,
-.status-chip strong {
+.info-group {
+  background: #fff7ec;
+  border: 1px solid rgba(255, 122, 0, 0.18);
+  border-radius: 20px;
+  padding: 16px;
+  text-align: left;
+}
+
+.label {
+  font-size: 12px;
+  color: #c37309;
+  margin-bottom: 6px;
   display: block;
-  font-size: 1.25rem;
 }
 
+.label + strong {
+  font-size: 20px;
+  color: #4a4a4a;
+}
+
+/* CANVAS */
 #canvas {
   width: 100%;
-  height: calc(100vh - 220px);
-  display: block;
+  min-height: 520px;
+  background: #ffffff;
   border-radius: 28px;
-  background: #fff;
-  border: 2px solid #e0e0d5;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
 }
 
-@media (max-width: 760px) {
+@media (max-width: 860px) {
+  .waiting-card,
+  .canvas-card {
+    margin: 30px auto;
+    padding: 26px;
+  }
+
   .canvas-header {
-    flex-direction: column;
-    align-items: stretch;
+    grid-template-columns: 1fr;
   }
 }

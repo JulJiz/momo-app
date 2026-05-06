@@ -1,5 +1,5 @@
 export function joinRoom(sessionCode) {
-  const socket = window.io("http://localhost:3000", {
+  const socket = window.io("http://localhost:5050", {
     path: "/real-time",
   });
 

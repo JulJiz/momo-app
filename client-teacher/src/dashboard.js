@@ -1,10 +1,6 @@
 import { getStudents } from "./api.js";
 
 let intervalId = null;
-const studentsContainer = document.getElementById("students");
-const countElement = document.getElementById("students-count");
-const statusElement = document.getElementById("session-status");
-const timeElement = document.getElementById("time-remaining");
 
 function formatTime(seconds) {
   const total = Number(seconds) || 0;
@@ -17,57 +13,38 @@ function formatTime(seconds) {
   return `${minutes}:${secondsLeft}`;
 }
 
-function renderStudents(students) {
-  studentsContainer.innerHTML = "";
-
-  if (!Array.isArray(students) || students.length === 0) {
-    countElement.innerText = "0";
-    studentsContainer.innerHTML =
-      '<p class="empty-state">Aún no hay estudiantes conectados.</p>';
-    return;
-  }
-
-  countElement.innerText = String(students.length);
-
-  students.forEach((student) => {
-    const badge = document.createElement("div");
-    badge.className = "student-badge";
-    badge.innerHTML = `
-      <span class="student-name">${student.nickname || student.device_id || student.id}</span>
-      <span class="student-status ${student.status}">${student.status}</span>
-    `;
-    studentsContainer.appendChild(badge);
-  });
-}
-
-function updateMonitor(data) {
-  if (!data) {
-    return;
-  }
-
-  statusElement.innerText = data.status || "waiting";
-  timeElement.innerText = formatTime(data.time_remaining);
-  renderStudents(data.students);
-}
-
 async function refreshMonitor(sessionCode) {
   try {
     const data = await getStudents(sessionCode);
-    updateMonitor(data);
+    return data;
   } catch (error) {
     console.error("Error al obtener el estado de la sesión:", error);
+    throw error;
   }
 }
 
-export function startMonitoring(sessionCode) {
+export async function startMonitoring(sessionCode, onUpdate) {
   if (!sessionCode) {
-    return;
+    throw new Error("Session code is required");
   }
 
   if (intervalId) {
     clearInterval(intervalId);
   }
 
-  refreshMonitor(sessionCode);
-  intervalId = setInterval(() => refreshMonitor(sessionCode), 3000);
+  const poll = async () => {
+    try {
+      const data = await refreshMonitor(sessionCode);
+      if (typeof onUpdate === "function") {
+        onUpdate(data);
+      }
+    } catch (error) {
+      console.warn("Error refreshing session monitor", error);
+    }
+  };
+
+  await poll();
+  intervalId = setInterval(poll, 3000);
+
+  return null;
 }

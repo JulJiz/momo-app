@@ -23,6 +23,9 @@
             ><strong id="session-state">waiting</strong></span
           >
         </div>
+        <div class="student-list" id="student-list">
+          <p class="empty-state">Aún no hay estudiantes conectados.</p>
+        </div>
         <button id="start-btn" class="button primary">Start Activity</button>
       </section>
     </div>
@@ -37,9 +40,28 @@
         localStorage.setItem("code", code);
         document.getElementById("code").innerText = code;
 
-        const socket = io("http://localhost:3000", {
+        const socket = io("http://localhost:5050", {
           path: "/real-time",
         });
+
+        const studentList = document.getElementById("student-list");
+
+        function renderStudentChips(students = []) {
+          const names = students
+            .slice(0, 12)
+            .map((student) => student.nickname || student.device_id || "Alumno")
+            .filter(Boolean);
+
+          if (names.length === 0) {
+            studentList.innerHTML =
+              '<p class="empty-state">Aún no hay estudiantes conectados.</p>';
+            return;
+          }
+
+          studentList.innerHTML = names
+            .map((name) => `<span class=\"student-chip\">${name}</span>`)
+            .join("");
+        }
 
         socket.on("connect", () => {
           socket.emit("join-session", {
@@ -56,12 +78,13 @@
         async function refreshCount() {
           try {
             const res = await fetch(
-              `http://localhost:3000/session/monitor?session_code=${encodeURIComponent(code)}`,
+              `http://localhost:5050/session/monitor?session_code=${encodeURIComponent(code)}`,
             );
             const data = await res.json();
             document.getElementById("students-count").innerText = (
               data.students || []
             ).length;
+            renderStudentChips(data.students || []);
           } catch (error) {
             console.warn(error);
           }
