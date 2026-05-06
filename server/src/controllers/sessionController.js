@@ -1,10 +1,12 @@
 const {
   StoreError,
   createSession,
+  getSessionSnapshot,
   getSessionMonitor,
   joinSession,
   updateSessionStatus,
 } = require("../services/sessionStore");
+const persistence = require("../services/supabasePersistence");
 
 let socketServer = null;
 
@@ -63,12 +65,14 @@ function emitSessionState(session) {
     .emit("session-state", state);
 }
 
-function createSessionHandler(request, response) {
+async function createSessionHandler(request, response) {
   try {
     const body = getRequestBody(request);
     const session = createSession({
       durationMinutes: body.duration_minutes,
     });
+
+    await persistence.saveSession(session);
 
     return response.status(201).json({
       session_code: session.session_code,
@@ -80,7 +84,7 @@ function createSessionHandler(request, response) {
   }
 }
 
-function joinSessionHandler(request, response) {
+async function joinSessionHandler(request, response) {
   try {
     const body = getRequestBody(request);
     requireField(
@@ -99,6 +103,8 @@ function joinSessionHandler(request, response) {
       deviceId: body.device_id,
       nickname: body.nickname,
     });
+
+    await persistence.saveSession(getSessionSnapshot(result.session_code));
 
     return response.status(200).json(result);
   } catch (error) {
@@ -123,7 +129,7 @@ function getSessionMonitorHandler(request, response) {
   }
 }
 
-function controlSessionHandler(request, response) {
+async function controlSessionHandler(request, response) {
   try {
     const body = getRequestBody(request);
     requireField(
@@ -139,6 +145,7 @@ function controlSessionHandler(request, response) {
       action: body.action,
     });
 
+    await persistence.saveSession(session);
     emitSessionState(session);
 
     return response.status(200).json({

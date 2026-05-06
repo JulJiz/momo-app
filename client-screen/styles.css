@@ -1,0 +1,216 @@
+﻿/* RESET */
+body {
+  margin: 0;
+  font-family: "Comic Sans MS", cursive;
+  background: #fffaf2;
+  overflow: hidden;
+}
+
+/* FONDO GENERAL */
+.screen-shell {
+  width: 100vw;
+  min-height: 100vh;
+  position: relative;
+  background: #fffaf2;
+}
+
+.screen-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("../assets/Vector.png");
+  background-position: bottom center;
+  background-size: 100% auto;
+  background-repeat: no-repeat;
+  z-index: 0;
+}
+
+.screen-shell::after {
+  content: "";
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  top: 16%;
+  right: 6%;
+  background: url("../assets/Group-4.png") center/contain no-repeat;
+  z-index: 1;
+  opacity: 0.95;
+}
+
+.waiting-card::before {
+  content: "";
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  top: 14px;
+  left: -12px;
+  background: url("../assets/Group-10.png") center/contain no-repeat;
+  z-index: 0;
+  opacity: 0.95;
+}
+
+.canvas-card::before {
+  content: "";
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  bottom: 12px;
+  right: -8px;
+  background: url("../assets/Crayon-2.png") center/contain no-repeat;
+  z-index: 0;
+  opacity: 0.95;
+}
+
+/* CONTENIDO */
+.waiting-card,
+.canvas-card {
+  position: relative;
+  z-index: 2;
+
+  width: 700px;
+  max-width: 92%;
+
+  margin: 60px auto;
+  padding: 34px;
+
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 30px;
+  text-align: center;
+  box-shadow: 0 14px 0 rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 122, 0, 0.14);
+}
+
+/* TITULOS */
+h1 {
+  color: #ff7a00;
+  font-size: 32px;
+  margin: 0 0 16px;
+}
+
+/* SESSION CODE */
+.code-pill {
+  border: 3px solid #ff7a00;
+  padding: 16px 34px;
+  border-radius: 22px;
+  font-size: 32px;
+  margin: 16px 0;
+  font-weight: 800;
+  background: white;
+  display: inline-block;
+}
+
+/* STATUS */
+.status-line {
+  margin: 20px 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.status-chip {
+  background: #ffe5d0;
+  padding: 10px 16px;
+  border-radius: 999px;
+  margin: 5px;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 700;
+  color: #b45f02;
+}
+
+/* STUDENTS */
+.student-list {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  min-height: 86px;
+}
+
+.student-chip {
+  background: #ffb3c1;
+  color: #7f1d2c;
+  padding: 8px 14px;
+  border-radius: 999px;
+  margin: 4px;
+  display: inline-flex;
+  font-weight: 700;
+}
+
+/* BOTON */
+.button {
+  background: #ff7a00;
+  color: white;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 15px;
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.08);
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+.button.primary {
+  min-width: 200px;
+}
+
+/* HEADER CANVAS */
+.canvas-header {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 16px;
+  align-items: stretch;
+  margin-bottom: 24px;
+}
+
+.info-group {
+  background: #fff7ec;
+  border: 1px solid rgba(255, 122, 0, 0.18);
+  border-radius: 20px;
+  padding: 16px;
+  text-align: left;
+}
+
+.label {
+  font-size: 12px;
+  color: #c37309;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.label + strong {
+  font-size: 20px;
+  color: #4a4a4a;
+}
+
+/* CANVAS */
+#canvas {
+  width: 100%;
+  min-height: 520px;
+  background: #ffffff;
+  border-radius: 28px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+@media (max-width: 860px) {
+  .waiting-card,
+  .canvas-card {
+    margin: 30px auto;
+    padding: 26px;
+  }
+
+  .canvas-header {
+    grid-template-columns: 1fr;
+  }
+}

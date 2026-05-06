@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MOMO Screen</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="screen-shell">
+      <section class="canvas-card">
+        <div class="canvas-header">
+          <div class="info-group">
+            <span class="label">Session Code</span>
+            <strong id="code">----</strong>
+          </div>
+          <div class="info-group">
+            <span class="label">Remaining time</span>
+            <strong id="time">00:00</strong>
+          </div>
+          <div class="info-group">
+            <span class="label">Status</span>
+            <strong id="screen-status">connecting...</strong>
+          </div>
+        </div>
+
+        <canvas id="canvas"></canvas>
+      </section>
+    </div>
+
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <script type="module" src="./src/app.js"></script>
+    <script src="./src/canvas.js"></script>
+  </body>
+</html>

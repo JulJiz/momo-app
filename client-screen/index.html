@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MOMO Screen Waiting</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="screen-shell">
+      <section class="waiting-card">
+        <h1>Session Code</h1>
+        <div class="code-pill" id="code">----</div>
+        <p>
+          Los estudiantes se estan uniendo. Abre el proyector cuando estes
+          listo.
+        </p>
+        <div class="status-line">
+          <span class="status-chip"
+            ><strong id="students-count">0</strong> students connected</span
+          >
+          <span class="status-chip"
+            ><strong id="session-state">waiting</strong></span
+          >
+        </div>
+        <div class="student-list" id="student-list">
+          <p class="empty-state">Aun no hay estudiantes conectados.</p>
+        </div>
+        <button id="start-btn" class="button primary">Start Activity</button>
+      </section>
+    </div>
+
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <script>
+      const code = localStorage.getItem("code") || prompt("Enter session code");
+      if (!code) {
+        document.body.innerHTML =
+          '<p style="color:#2c2c2c;padding:24px;text-align:center;">Session code is required.</p>';
+      } else {
+        localStorage.setItem("code", code);
+        document.getElementById("code").innerText = code;
+
+        const socket = io(window.location.origin, {
+          path: "/real-time",
+        });
+
+        const studentList = document.getElementById("student-list");
+
+        function renderStudentChips(students = []) {
+          const names = students
+            .slice(0, 12)
+            .map((student) => student.nickname || student.device_id || "Alumno")
+            .filter(Boolean);
+
+          if (names.length === 0) {
+            studentList.innerHTML =
+              '<p class="empty-state">Aun no hay estudiantes conectados.</p>';
+            return;
+          }
+
+          studentList.innerHTML = names
+            .map((name) => `<span class=\"student-chip\">${name}</span>`)
+            .join("");
+        }
+
+        socket.on("connect", () => {
+          socket.emit("join-session", {
+            session_code: code,
+            role: "screen",
+          });
+        });
+
+        socket.on("session-state", (state) => {
+          document.getElementById("session-state").innerText =
+            state.status || "waiting";
+        });
+
+        async function refreshCount() {
+          try {
+            const res = await fetch(
+              `${window.location.origin}/session/monitor?session_code=${encodeURIComponent(code)}`,
+            );
+            const data = await res.json();
+            document.getElementById("students-count").innerText = (
+              data.students || []
+            ).length;
+            renderStudentChips(data.students || []);
+          } catch (error) {
+            console.warn(error);
+          }
+        }
+
+        refreshCount();
+        setInterval(refreshCount, 3000);
+
+        document.getElementById("start-btn").addEventListener("click", () => {
+          location.href = "dashboard.html";
+        });
+      }
+    </script>
+  </body>
+</html>

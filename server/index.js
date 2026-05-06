@@ -1,9 +1,12 @@
 const express = require("express");
 const cors = require("cors");
 const { createServer } = require("http");
+const path = require("path");
 const { Server } = require("socket.io");
 const config = require("./src/config/env");
 const sessionRoutes = require("./src/routes/sessionRoutes");
+const { hydrateSessions } = require("./src/services/sessionStore");
+const persistence = require("./src/services/supabasePersistence");
 const { registerMomoSocket } = require("./src/sockets/momoSocket");
 const {
   registerSessionControllerSocket,
@@ -26,12 +29,20 @@ app.use(
 );
 app.use(express.json());
 
+app.use("/student", express.static(path.join(__dirname, "../client-student")));
+app.use("/teacher", express.static(path.join(__dirname, "../client-teacher")));
+app.use("/screen", express.static(path.join(__dirname, "../client-screen")));
+
 app.get("/health", (request, response) => {
   response.json({
     ok: true,
     app: "momo",
     status: "running",
   });
+});
+
+app.get("/", (request, response) => {
+  response.redirect("/teacher");
 });
 
 // API REST de sesiones usada por el MVP estudiante y el futuro dashboard.
@@ -51,6 +62,22 @@ app.use((error, request, response, next) => {
 
 registerMomoSocket(io);
 
-httpServer.listen(config.port, () => {
-  console.log(`MOMO server running on http://localhost:${config.port}`);
-});
+async function startServer() {
+  if (persistence.isEnabled()) {
+    try {
+      const snapshot = await persistence.loadSnapshot();
+      hydrateSessions(snapshot);
+      console.log("Supabase persistence loaded.");
+    } catch (error) {
+      persistence.logPersistenceError(error);
+    }
+  } else {
+    console.log("Supabase persistence disabled. Using memory store.");
+  }
+
+  httpServer.listen(config.port, () => {
+    console.log(`MOMO server running on http://localhost:${config.port}`);
+  });
+}
+
+startServer();

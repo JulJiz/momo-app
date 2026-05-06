@@ -12,13 +12,12 @@ Included:
 - Initial Screen/Projector Client UI.
 - Session creation, student join, session status and student monitoring contracts.
 - Real-time events for drawing, session state, sensor data and basic feedback.
-- In-memory data model for the first MVP.
+- Supabase persistence for sessions, students, strokes, sensor events and assistant feedback.
 
 Not included yet:
 
 - Real QR generation.
 - AI-based drawing similarity.
-- Persistent database.
 - Final visual design.
 
 ## Tech Stack
@@ -26,6 +25,7 @@ Not included yet:
 - Node.js
 - Express
 - Socket.io
+- Supabase
 - HTML
 - CSS
 - Vanilla JavaScript
@@ -47,10 +47,12 @@ Expected local server URL:
 http://localhost:5050
 ```
 
-The student client will be opened from:
+The server also serves the three prototype clients:
 
 ```text
-client-student/index.html
+http://localhost:5050/teacher
+http://localhost:5050/student
+http://localhost:5050/screen
 ```
 
 For local configuration, copy `.env.example` to `.env` if custom values are needed:
@@ -58,9 +60,11 @@ For local configuration, copy `.env.example` to `.env` if custom values are need
 ```text
 PORT=5050
 CLIENT_ORIGIN=*
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
 ```
 
-`PORT` controls the backend port. `CLIENT_ORIGIN` controls CORS and can stay as `*` during local Delivery 1 testing.
+`PORT` controls the backend port. `CLIENT_ORIGIN` controls CORS and can stay as `*` during local Delivery 1 testing. Supabase values are required when the demo needs real persistence; keep the service role key only in the server `.env`.
 
 ## Architecture Overview
 
@@ -72,13 +76,45 @@ Student Mobile Client
 Express + Socket.io Server
   |-- REST API: sessions and monitor
   |-- WebSocket rooms: real-time session channels
-  `-- In-memory store: sessions, students, strokes, sensor events
+  |-- In-memory store: fast session state for live sockets
+  `-- Supabase REST: persistent sessions, students, strokes, sensors, feedback
 
 Initial Teacher Dashboard
   `-- HTTP REST: create/control session and monitor students
 
 Initial Screen/Projector Client
   `-- Socket.io: listen to canvas-broadcast events
+```
+
+## Supabase Persistence
+
+Run `supabase/schema.sql` in the Supabase SQL Editor before starting the deployed or local server with persistence enabled. Then configure:
+
+```text
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+```
+
+The server uses Supabase through its REST API, so no extra package is required.
+
+Data transfer during the demo:
+
+- `POST /session/create` creates a session in memory and upserts it into `sessions`.
+- `POST /session/join` registers the student and upserts the session plus `students`.
+- `POST /session/control` updates status/timer fields and upserts the session.
+- Socket event `draw` validates the stroke, broadcasts it in real time and upserts it into `strokes`.
+- Socket event `sensor` validates motion data and upserts it into `sensor_events`.
+- MOMO assistant feedback is generated from simple backend rules and upserted into `ai_feedback`.
+- On server startup, Supabase rows are loaded back into the in-memory store so recent sessions can still be consulted after a restart.
+
+Useful Supabase SQL checks:
+
+```sql
+select * from public.sessions order by created_at desc;
+select * from public.students where session_code = 'ABC123';
+select * from public.strokes where session_code = 'ABC123' order by sequence;
+select * from public.sensor_events where session_code = 'ABC123' order by created_at desc;
+select * from public.ai_feedback where session_code = 'ABC123' order by created_at desc;
 ```
 
 ## Protocols
@@ -303,7 +339,7 @@ If `shake` is `true`, the server emits `feedback` to that student:
 
 ## Data Model for Delivery 1
 
-Delivery 1 starts with an in-memory store located in `server/src/services/sessionStore.js`. This keeps the MVP simple and can later be migrated to Supabase without changing the public API contracts.
+Delivery 1 uses `server/src/services/sessionStore.js` for live socket state and Supabase for real persistence. The SQL schema/export is available in `supabase/schema.sql`.
 
 Current schema-like shape:
 
@@ -331,6 +367,7 @@ Student
 - last_active_at: timestamp
 
 Stroke
+- stroke_id: unique persisted stroke id
 - session_code: parent session
 - device_id: student device id
 - x, y: current coordinates
@@ -343,15 +380,26 @@ Stroke
 - created_at: timestamp
 
 SensorEvent
+- sensor_event_id: unique persisted sensor event id
 - session_code: parent session
 - device_id: student device id
 - tilt: device orientation values
 - shake: boolean
 - orientation: portrait, landscape or null
 - created_at: timestamp
+
+AiFeedback
+- feedback_id: unique persisted assistant feedback id
+- session_code: parent session
+- device_id: student device id
+- feedback_type: movement or drawing
+- points: small participation score
+- message: friendly MOMO feedback
+- metadata: supporting JSON data
+- created_at: timestamp
 ```
 
-There is no database export in Delivery 1 because persistence is intentionally in memory. When the project moves to Supabase later, this section should become the base for the required schema/export.
+The in-memory copy keeps the real-time demo fast; Supabase proves that data is saved, queried and available after restarting the server.
 
 ## Manual Integration Flow
 
@@ -388,7 +436,7 @@ Copy the `session_code` from the response. In the examples below, replace `ABC12
 5. Open the student client in a browser:
 
 ```text
-client-student/index.html
+http://localhost:5050/student
 ```
 
 6. Join from the student UI using the generated code and any student name.
@@ -409,7 +457,9 @@ curl -X POST http://localhost:5050/session/control \
 curl "http://localhost:5050/session/monitor?session_code=ABC123"
 ```
 
-10. Test pause and resume:
+10. Confirm that data reached Supabase by running one of the SQL checks from the Supabase Persistence section.
+
+11. Test pause and resume:
 
 ```bash
 curl -X POST http://localhost:5050/session/control \
@@ -421,9 +471,9 @@ curl -X POST http://localhost:5050/session/control \
   -d "{\"session_code\":\"ABC123\",\"action\":\"start\"}"
 ```
 
-11. Test sensors on a compatible mobile browser if available. If the browser does not support motion sensors or denies permission, drawing still works.
+12. Test sensors on a compatible mobile browser if available. If the browser does not support motion sensors or denies permission, drawing still works.
 
-12. End the session:
+13. End the session:
 
 ```bash
 curl -X POST http://localhost:5050/session/control \
@@ -439,12 +489,13 @@ The Delivery 1 demo should be executed without changing source files during the 
 
 1. Keep `.env` prepared before class if custom values are needed. Local defaults are `PORT=5050` and `CLIENT_ORIGIN=*`.
 2. Run `npm start`.
-3. Create a session with `POST /session/create`.
-4. Open `client-student/index.html`.
-5. Join using the session code shown by the API.
-6. Start, pause or end with `POST /session/control`.
-7. Draw with the toolbar and, when possible, move the phone to test sensor feedback.
-8. Use `GET /session/monitor` to show connected students and session status.
+3. Open `http://localhost:5050/teacher` and create a session.
+4. Open `http://localhost:5050/screen` and connect the projector with the same code.
+5. Open `http://localhost:5050/student` on one or more devices.
+6. Join using the session code shown by the teacher dashboard.
+7. Start, pause or end from the teacher dashboard.
+8. Draw with the toolbar and, when possible, move the phone to test sensor feedback.
+9. Show Supabase rows for `sessions`, `students`, `strokes`, `sensor_events` and `ai_feedback`.
 
 Teacher Dashboard and Screen/Projector Client are part of the Delivery 1 scope in their initial version. This README documents the backend and student-client contracts they use: REST, `session-state` and `canvas-broadcast`.
 
@@ -455,7 +506,8 @@ What the demo shows:
 - Student client: joins by REST, then uses Socket.io for real-time drawing and sensors.
 - Express server: exposes REST endpoints for session lifecycle and monitor data.
 - Socket.io server: runs on `/real-time`, puts clients into `session:{session_code}` rooms, and broadcasts updates.
-- In-memory store: keeps sessions, students, strokes and sensor events during the server process.
+- Supabase persistence: stores sessions, students, strokes, sensor events and assistant feedback for real queries.
+- In-memory store: keeps live session state for fast socket broadcasts and is hydrated from Supabase on startup.
 - Screen room: `session:{session_code}:screen` receives `canvas-broadcast` for the initial projector client.
 
 Protocol split:
