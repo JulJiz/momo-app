@@ -3,9 +3,15 @@ const {
   addSensorEvent,
   addStroke,
   findSession,
+  getSessionSnapshot,
   getSessionMonitor,
   setStudentConnection,
 } = require("../services/sessionStore");
+const {
+  buildSensorFeedback,
+  buildStrokeFeedback,
+} = require("../services/assistantService");
+const persistence = require("../services/supabasePersistence");
 
 function buildSessionRoom(sessionCode) {
   return `session:${sessionCode}`;
@@ -66,7 +72,7 @@ function registerMomoSocket(io) {
   io.on("connection", (socket) => {
     console.log(`Socket connected: ${socket.id}`);
 
-    socket.on("join-session", (payload = {}) => {
+    socket.on("join-session", async (payload = {}) => {
       try {
         const safePayload = getSocketPayload(payload);
         const sessionCode = String(safePayload.session_code || "")
@@ -106,6 +112,7 @@ function registerMomoSocket(io) {
           socket.data.deviceId = deviceId;
           socket.join(buildSessionRoom(sessionCode));
           setStudentConnection({ sessionCode, deviceId, connected: true });
+          await persistence.saveSession(getSessionSnapshot(sessionCode));
         }
 
         // El estado inicial permite que el cliente muestre waiting/active.
@@ -118,7 +125,7 @@ function registerMomoSocket(io) {
       }
     });
 
-    socket.on("draw", (payload = {}) => {
+    socket.on("draw", async (payload = {}) => {
       try {
         const safePayload = getSocketPayload(payload);
         const { sessionCode, deviceId } = readStudentContext(
@@ -129,6 +136,11 @@ function registerMomoSocket(io) {
           ...safePayload,
           device_id: deviceId,
         });
+        const feedback = buildStrokeFeedback(storedStroke);
+
+        await persistence.saveStroke(storedStroke);
+        await persistence.saveSession(getSessionSnapshot(sessionCode));
+        await persistence.saveAiFeedback(feedback);
 
         // Se emite tambien al room de estudiantes para probarlo sin proyector.
         io.to(buildSessionRoom(sessionCode)).emit(
@@ -139,12 +151,19 @@ function registerMomoSocket(io) {
           "canvas-broadcast",
           storedStroke
         );
+
+        if (feedback) {
+          socket.emit("feedback", {
+            points: feedback.points,
+            message: feedback.message,
+          });
+        }
       } catch (error) {
         emitSocketError(socket, error);
       }
     });
 
-    socket.on("sensor", (payload = {}) => {
+    socket.on("sensor", async (payload = {}) => {
       try {
         const safePayload = getSocketPayload(payload);
         const { sessionCode, deviceId } = readStudentContext(
@@ -155,11 +174,15 @@ function registerMomoSocket(io) {
           ...safePayload,
           device_id: deviceId,
         });
+        const feedback = buildSensorFeedback(sensorEvent);
 
-        if (sensorEvent.shake) {
+        await persistence.saveSensorEvent(sensorEvent);
+        await persistence.saveAiFeedback(feedback);
+
+        if (feedback) {
           socket.emit("feedback", {
-            points: 1,
-            message: "MOMO vio tu movimiento",
+            points: feedback.points,
+            message: feedback.message,
           });
         }
       } catch (error) {
@@ -167,7 +190,7 @@ function registerMomoSocket(io) {
       }
     });
 
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
       if (socket.data.role === "student" && socket.data.deviceId) {
         try {
           setStudentConnection({
@@ -175,6 +198,9 @@ function registerMomoSocket(io) {
             deviceId: socket.data.deviceId,
             connected: false,
           });
+          await persistence.saveSession(
+            getSessionSnapshot(socket.data.sessionCode)
+          );
         } catch (error) {
           console.error(error);
         }

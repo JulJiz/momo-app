@@ -5,6 +5,8 @@ const path = require("path");
 const { Server } = require("socket.io");
 const config = require("./src/config/env");
 const sessionRoutes = require("./src/routes/sessionRoutes");
+const { hydrateSessions } = require("./src/services/sessionStore");
+const persistence = require("./src/services/supabasePersistence");
 const { registerMomoSocket } = require("./src/sockets/momoSocket");
 const {
   registerSessionControllerSocket,
@@ -60,6 +62,22 @@ app.use((error, request, response, next) => {
 
 registerMomoSocket(io);
 
-httpServer.listen(config.port, () => {
-  console.log(`MOMO server running on http://localhost:${config.port}`);
-});
+async function startServer() {
+  if (persistence.isEnabled()) {
+    try {
+      const snapshot = await persistence.loadSnapshot();
+      hydrateSessions(snapshot);
+      console.log("Supabase persistence loaded.");
+    } catch (error) {
+      persistence.logPersistenceError(error);
+    }
+  } else {
+    console.log("Supabase persistence disabled. Using memory store.");
+  }
+
+  httpServer.listen(config.port, () => {
+    console.log(`MOMO server running on http://localhost:${config.port}`);
+  });
+}
+
+startServer();

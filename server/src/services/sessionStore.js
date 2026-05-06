@@ -1,3 +1,5 @@
+const { randomUUID } = require("crypto");
+
 const SESSION_CODE_LENGTH = 6;
 const DEFAULT_DURATION_MINUTES = 10;
 const CODE_CHARACTERS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -16,7 +18,7 @@ class StoreError extends Error {
   }
 }
 
-// En la Entrega 1 guardamos datos en memoria para evitar complejidad de BD.
+// El Map mantiene la sesion viva para sockets; Supabase guarda la copia persistente.
 const sessions = new Map();
 
 function normalizeSessionCode(sessionCode) {
@@ -68,6 +70,16 @@ function getSessionOrThrow(sessionCode) {
   return session;
 }
 
+function requireActiveSession(session) {
+  if (session.status !== "active") {
+    throw new StoreError(
+      "SESSION_NOT_ACTIVE",
+      "Session must be active before receiving interaction data",
+      409
+    );
+  }
+}
+
 function sanitizeDurationMinutes(durationMinutes) {
   if (durationMinutes === undefined || durationMinutes === null || durationMinutes === "") {
     return DEFAULT_DURATION_MINUTES;
@@ -117,6 +129,16 @@ function requireFiniteNumber(value, fieldName) {
   }
 
   return parsedValue;
+}
+
+function toNullableNumber(value) {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+
+  const parsedValue = Number(value);
+
+  return Number.isFinite(parsedValue) ? parsedValue : null;
 }
 
 function sanitizeColor(color) {
@@ -217,6 +239,7 @@ function serializeSession(session) {
     status: session.status,
     created_at: session.created_at,
     duration_seconds: session.duration_seconds,
+    remaining_seconds: session.remaining_seconds,
     started_at: session.started_at,
     paused_at: session.paused_at,
     ended_at: session.ended_at,
@@ -256,6 +279,10 @@ function findSession(sessionCode) {
   const session = sessions.get(normalizedCode);
 
   return session ? serializeSession(session) : null;
+}
+
+function getSessionSnapshot(sessionCode) {
+  return serializeSession(getSessionOrThrow(sessionCode));
 }
 
 function joinSession({ sessionCode, deviceId, nickname }) {
@@ -348,7 +375,12 @@ function addStroke(sessionCode, stroke) {
     throw new StoreError("STUDENT_NOT_FOUND", "Student is not in the session", 404);
   }
 
+  requireActiveSession(session);
+
   const storedStroke = {
+    stroke_id:
+      safeStroke.stroke_id ||
+      `${session.session_code}:${deviceId}:${safeStroke.sequence || session.strokes.length + 1}`,
     session_code: session.session_code,
     device_id: deviceId,
     x: requireFiniteNumber(safeStroke.x, "x"),
@@ -402,7 +434,10 @@ function addSensorEvent(sessionCode, sensorEvent) {
     throw new StoreError("STUDENT_NOT_FOUND", "Student is not in the session", 404);
   }
 
+  requireActiveSession(session);
+
   const storedSensorEvent = {
+    sensor_event_id: safeSensorEvent.sensor_event_id || randomUUID(),
     session_code: session.session_code,
     device_id: deviceId,
     tilt: sanitizeTilt(safeSensorEvent.tilt),
@@ -446,13 +481,82 @@ function setStudentConnection({ sessionCode, deviceId, connected }) {
   return serializeStudent(student);
 }
 
+function hydrateSessions(snapshot = {}) {
+  const nextSessions = new Map();
+  const rows = Array.isArray(snapshot.sessions) ? snapshot.sessions : [];
+
+  rows.forEach((row) => {
+    const durationSeconds =
+      Number(row.duration_seconds) || DEFAULT_DURATION_MINUTES * 60;
+    const remainingSeconds =
+      row.remaining_seconds === undefined || row.remaining_seconds === null
+        ? durationSeconds
+        : Number(row.remaining_seconds);
+
+    nextSessions.set(normalizeSessionCode(row.session_code), {
+      session_code: normalizeSessionCode(row.session_code),
+      status: row.status || "waiting",
+      created_at: Number(row.created_at) || Date.now(),
+      duration_seconds: durationSeconds,
+      remaining_seconds: Number.isFinite(remainingSeconds)
+        ? remainingSeconds
+        : durationSeconds,
+      started_at: toNullableNumber(row.started_at),
+      paused_at: toNullableNumber(row.paused_at),
+      ended_at: toNullableNumber(row.ended_at),
+      students: new Map(),
+      strokes: [],
+      sensor_events: [],
+    });
+  });
+
+  (snapshot.students || []).forEach((student) => {
+    const session = nextSessions.get(normalizeSessionCode(student.session_code));
+
+    if (session) {
+      session.students.set(normalizeDeviceId(student.device_id), {
+        student_id: student.student_id || student.device_id,
+        device_id: student.device_id,
+        nickname: student.nickname || "Estudiante",
+        status: student.status || "idle",
+        connected: Boolean(student.connected),
+        joined_at: Number(student.joined_at) || Date.now(),
+        last_active_at: Number(student.last_active_at) || Date.now(),
+      });
+    }
+  });
+
+  (snapshot.strokes || []).forEach((stroke) => {
+    const session = nextSessions.get(normalizeSessionCode(stroke.session_code));
+
+    if (session) {
+      session.strokes.push(stroke);
+    }
+  });
+
+  (snapshot.sensorEvents || []).forEach((sensorEvent) => {
+    const session = nextSessions.get(normalizeSessionCode(sensorEvent.session_code));
+
+    if (session) {
+      session.sensor_events.push(sensorEvent);
+    }
+  });
+
+  sessions.clear();
+  nextSessions.forEach((session, sessionCode) => {
+    sessions.set(sessionCode, session);
+  });
+}
+
 module.exports = {
   StoreError,
   addSensorEvent,
   addStroke,
   createSession,
   findSession,
+  getSessionSnapshot,
   getSessionMonitor,
+  hydrateSessions,
   joinSession,
   markStudentStatus,
   setStudentConnection,
