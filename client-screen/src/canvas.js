@@ -1,5 +1,3 @@
-import { socket } from "./socket.js";
-
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
@@ -13,13 +11,6 @@ function resizeCanvas() {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 }
-
-resizeCanvas();
-window.addEventListener("resize", resizeCanvas);
-
-socket.on("canvas-broadcast", (data) => {
-  draw(data);
-});
 
 function draw({ x, y, prev_x, prev_y, color, brush_size, tool }) {
   const rect = canvas.getBoundingClientRect();
@@ -55,7 +46,14 @@ function draw({ x, y, prev_x, prev_y, color, brush_size, tool }) {
   }
 }
 
-// limpiar canvas
-socket.on("clear-canvas", () => {
+function clearCanvas() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-});
+}
+
+export function initCanvas(socket) {
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
+
+  socket.on("canvas-broadcast", draw);
+  socket.on("clear-canvas", clearCanvas);
+}

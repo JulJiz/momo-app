@@ -1,4 +1,5 @@
 import { joinRoom } from "./socket.js";
+import { initCanvas } from "./canvas.js";
 
 const code = localStorage.getItem("code") || prompt("Enter session code");
 if (!code) {
@@ -9,6 +10,7 @@ if (!code) {
 
 localStorage.setItem("code", code);
 const socket = joinRoom(code);
+initCanvas(socket);
 const title = document.getElementById("code");
 const time = document.getElementById("time");
 const status = document.getElementById("screen-status");
@@ -29,6 +31,10 @@ function formatTime(seconds) {
 }
 
 socket.on("session-state", (state) => {
+  renderSessionState(state);
+});
+
+function renderSessionState(state) {
   if (status) {
     status.innerText = state.status || "waiting";
   }
@@ -36,9 +42,26 @@ socket.on("session-state", (state) => {
   if (time) {
     time.innerText = formatTime(state.time_remaining);
   }
-});
+}
+
+async function refreshMonitor() {
+  try {
+    const response = await fetch(
+      `${window.location.origin}/session/monitor?session_code=${encodeURIComponent(code)}`
+    );
+    const data = await response.json();
+    renderSessionState(data);
+  } catch (error) {
+    console.warn("Could not refresh screen timer.", error);
+  }
+}
+
+refreshMonitor();
+const monitorInterval = window.setInterval(refreshMonitor, 1000);
 
 window.addEventListener("beforeunload", () => {
+  window.clearInterval(monitorInterval);
+
   if (socket && socket.disconnect) {
     socket.disconnect();
   }
