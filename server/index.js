@@ -18,6 +18,7 @@ const clients = {
   student: path.join(__dirname, "../client-student"),
   teacher: path.join(__dirname, "../client-teacher"),
   screen: path.join(__dirname, "../client-screen"),
+  assets: path.join(__dirname, "../assets"),
 };
 const io = new Server(httpServer, {
   path: "/real-time",
@@ -53,6 +54,7 @@ function serveClient(route, directory) {
 serveClient("student", clients.student);
 serveClient("teacher", clients.teacher);
 serveClient("screen", clients.screen);
+app.use("/assets", express.static(clients.assets));
 
 app.get("/health", (request, response) => {
   response.json({
