@@ -352,11 +352,14 @@ function updateSessionStatus({ sessionCode, action }) {
 
 function getSessionMonitor(sessionCode) {
   const session = getSessionOrThrow(sessionCode);
+  const connectedStudents = Array.from(session.students.values()).filter(
+    (student) => student.connected
+  );
 
   return {
     session_code: session.session_code,
     status: session.status,
-    students: Array.from(session.students.values()).map(serializeStudent),
+    students: connectedStudents.map(serializeStudent),
     time_remaining: getTimeRemaining(session),
   };
 }
