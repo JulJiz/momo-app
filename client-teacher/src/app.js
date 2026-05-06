@@ -39,9 +39,14 @@ function showView(view) {
 }
 
 function setSessionCode(code, durationSeconds = 600) {
+  const isNewSession = sessionCode !== code;
   sessionCode = code;
   sessionDurationSeconds = durationSeconds;
   localStorage.setItem("code", code);
+
+  if (isNewSession) {
+    resetMessageLog();
+  }
 
   if (sessionCodeElement) {
     sessionCodeElement.innerText = code;
@@ -138,6 +143,14 @@ function renderSentMessage(message) {
   item.className = "message-item";
   item.textContent = message;
   messageLog.prepend(item);
+}
+
+function resetMessageLog() {
+  if (!messageLog) {
+    return;
+  }
+
+  messageLog.innerHTML = '<p class="empty-state">No messages sent yet.</p>';
 }
 
 function updateTimer(seconds) {
