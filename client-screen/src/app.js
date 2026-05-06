@@ -1,5 +1,5 @@
 import { joinRoom } from "./socket.js";
-import { initCanvas } from "./canvas.js";
+import { initCanvas, renderStudents } from "./canvas.js";
 
 const code = localStorage.getItem("code") || prompt("Enter session code");
 if (!code) {
@@ -51,6 +51,7 @@ async function refreshMonitor() {
     );
     const data = await response.json();
     renderSessionState(data);
+    renderStudents(data.students || []);
   } catch (error) {
     console.warn("Could not refresh screen timer.", error);
   }
